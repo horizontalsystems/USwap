@@ -2,18 +2,18 @@
   "author": "swapkit-oss",
   "dependencies": {
     "@near-js/providers": "~2.5.0",
-    "@swapkit/contracts": "workspace:*",
-    "@swapkit/tokens": "workspace:*",
-    "@swapkit/types": "workspace:*",
+    "@uswap/contracts": "workspace:*",
+    "@uswap/tokens": "workspace:*",
+    "@uswap/types": "workspace:*",
     "ethers": "^6.14.0",
     "ts-pattern": "5.9.0",
     "zod": "3.25.74",
     "zustand": "5.0.8"
   },
-  "description": "SwapKit - Helpers",
+  "description": "USwap - Helpers",
   "devDependencies": {
     "@near-js/providers": "2.5.0",
-    "@swapkit/toolboxes": "workspace:*",
+    "@uswap/toolboxes": "workspace:*",
     "ethers": "6.15.0",
     "tronweb": "6.1.0"
   },
@@ -44,10 +44,14 @@
     }
   },
   "files": ["dist/", "src/"],
-  "homepage": "https://github.com/swapkit/SwapKit",
+  "homepage": "https://github.com/horizontalsystems/USwap",
   "license": "Apache-2.0",
-  "name": "@swapkit/helpers",
-  "repository": { "directory": "packages/helpers", "type": "git", "url": "git+https://github.com/swapkit/SwapKit.git" },
+  "name": "@uswap/helpers",
+  "repository": {
+    "directory": "packages/helpers",
+    "type": "git",
+    "url": "git+https://github.com/horizontalsystems/USwap.git"
+  },
   "scripts": {
     "build": "bun run ./build.ts",
     "build:clean": "rm -rf dist && bun run ./build.ts",
@@ -59,5 +63,5 @@
     "type-check:go": "tsgo"
   },
   "type": "module",
-  "version": "4.5.9"
+  "version": "4.5.14"
 }

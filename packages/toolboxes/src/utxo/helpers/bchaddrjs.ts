@@ -1,4 +1,8 @@
-import { SwapKitError } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { USwapError } from "@uswap/helpers";
 import base58check from "bs58check";
 // @ts-expect-error
 import cashaddr from "cashaddrjs";
@@ -73,7 +77,7 @@ function decodeAddress(address: string) {
   } catch {
     // Try to decode as bitpay if cashaddr decoding fails.
   }
-  throw new SwapKitError("toolbox_utxo_invalid_address", { address });
+  throw new USwapError("toolbox_utxo_invalid_address", { address });
 }
 
 function decodeBase58Address(address: string) {
@@ -81,7 +85,7 @@ function decodeBase58Address(address: string) {
     const payload = base58check.decode(address);
 
     // BASE_58_CHECK_PAYLOAD_LENGTH
-    if (payload.length !== 21) throw new SwapKitError("toolbox_utxo_invalid_address", { address });
+    if (payload.length !== 21) throw new USwapError("toolbox_utxo_invalid_address", { address });
     const versionByte = payload[0];
     const hash = Array.prototype.slice.call(payload, 1);
 

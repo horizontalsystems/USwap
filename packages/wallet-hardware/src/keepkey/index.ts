@@ -1,17 +1,21 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { KeepKeySdk } from "@keepkey/keepkey-sdk";
 import {
   Chain,
   type DerivationPathArray,
   filterSupportedChains,
   NetworkDerivationPath,
-  SKConfig,
-  SwapKitError,
+  USwapConfig,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 
 export type { PairingInfo } from "@keepkey/keepkey-sdk";
 
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import { cosmosWalletMethods } from "./chains/cosmos";
 import { KeepKeySigner } from "./chains/evm";
 import { mayachainWalletMethods } from "./chains/mayachain";
@@ -22,10 +26,10 @@ export const keepkeyWallet = createWallet({
   connect: ({ addChain, supportedChains, walletType }) =>
     async function connectKeepkey(chains: Chain[], derivationPathMap?: Record<Chain, DerivationPathArray>) {
       const filteredChains = filterSupportedChains({ chains, supportedChains, walletType });
-      const pairingInfo = SKConfig.get("integrations").keepKey;
+      const pairingInfo = USwapConfig.get("integrations").keepKey;
       if (!pairingInfo) throw new Error("KeepKey config not found");
 
-      const initialApiKey = SKConfig.get("apiKeys").keepKey || "1234";
+      const initialApiKey = USwapConfig.get("apiKeys").keepKey || "1234";
 
       await checkAndLaunch();
 
@@ -33,9 +37,9 @@ export const keepkeyWallet = createWallet({
       const keepkeyConfig = { apiKey: initialApiKey, pairingInfo };
       const keepKeySdk = await KeepKeySdk.create(keepkeyConfig);
 
-      // Persist the new API key via SKConfig after pairing
+      // Persist the new API key via USwapConfig after pairing
       if (keepkeyConfig.apiKey && keepkeyConfig.apiKey !== initialApiKey) {
-        SKConfig.setApiKey("keepKey", keepkeyConfig.apiKey);
+        USwapConfig.setApiKey("keepKey", keepkeyConfig.apiKey);
       }
 
       await Promise.all(
@@ -87,7 +91,7 @@ async function getWalletMethods({
   chain: Chain;
   derivationPath?: DerivationPathArray;
 }) {
-  const { getProvider, getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+  const { getProvider, getEvmToolbox } = await import("@uswap/toolboxes/evm");
 
   switch (chain) {
     case Chain.BinanceSmartChain:
@@ -126,7 +130,7 @@ async function getWalletMethods({
       return rippleWalletMethods({ derivationPath, sdk });
     }
     default:
-      throw new SwapKitError("wallet_keepkey_chain_not_supported", { chain });
+      throw new USwapError("wallet_keepkey_chain_not_supported", { chain });
   }
 }
 

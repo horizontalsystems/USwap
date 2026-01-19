@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { bitgo, crypto, ECPair, networks, address as zcashAddress } from "@bitgo/utxo-lib";
 import { type ZcashPsbt, ZcashTransaction } from "@bitgo/utxo-lib/dist/src/bitgo";
 import { HDKey } from "@scure/bip32";
@@ -9,10 +13,10 @@ import {
   derivationPathToString,
   FeeOption,
   NetworkDerivationPath,
-  SKConfig,
-  SwapKitError,
+  USwapConfig,
+  USwapError,
   updateDerivationPath,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 import bs58check from "bs58check";
 import { match, P } from "ts-pattern";
 import { accumulative, compileMemo, getUtxoApi } from "../helpers";
@@ -49,7 +53,7 @@ function createZcashSignerFromPhrase({
   const node = root.derive(derivationPath);
 
   if (!node.privateKey) {
-    throw new SwapKitError("toolbox_utxo_invalid_params");
+    throw new USwapError("toolbox_utxo_invalid_params");
   }
 
   // Create key pair using BitGo's ECPair with ECPair-compatible network
@@ -57,7 +61,7 @@ function createZcashSignerFromPhrase({
   const keyPair = ECPair.fromPrivateKey(Buffer.from(node.privateKey), { network: ecpairNetwork });
 
   const pubKeyHash = crypto.hash160(keyPair.publicKey);
-  const { isStagenet } = SKConfig.get("envs");
+  const { isStagenet } = USwapConfig.get("envs");
 
   const prefix = isStagenet
     ? Buffer.from([0x1d, 0x25]) // testnet prefix (results in tm... addresses)
@@ -140,7 +144,7 @@ async function createTransaction(buildTxParams: UTXOBuildTxParams) {
   });
 
   if (!(inputs && outputs)) {
-    throw new SwapKitError("toolbox_utxo_insufficient_balance", { assetValue, sender });
+    throw new USwapError("toolbox_utxo_insufficient_balance", { assetValue, sender });
   }
 
   const psbt = bitgo.createPsbtForNetwork(
@@ -180,7 +184,7 @@ export async function createZcashToolbox(
   async function transfer({ recipient, assetValue, feeOptionKey = FeeOption.Fast, ...rest }: UTXOTransferParams) {
     const from = await signer?.getAddress();
     if (!(signer && from)) {
-      throw new SwapKitError("toolbox_utxo_no_signer");
+      throw new USwapError("toolbox_utxo_no_signer");
     }
 
     const feeRate = rest.feeRate || (await baseToolbox.getFeeRates())[feeOptionKey];
@@ -211,7 +215,7 @@ export async function createZcashToolbox(
     const node = root.derive(derivationPath);
 
     if (!node.privateKey) {
-      throw new SwapKitError("toolbox_utxo_invalid_params");
+      throw new USwapError("toolbox_utxo_invalid_params");
     }
 
     const ecpairNetwork = getECPairNetwork();

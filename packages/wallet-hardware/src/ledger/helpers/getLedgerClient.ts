@@ -1,4 +1,8 @@
-import { Chain, type DerivationPathArray, type EVMChain, SwapKitError, WalletOption } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { Chain, type DerivationPathArray, type EVMChain, USwapError, WalletOption } from "@uswap/helpers";
 
 import { CosmosLedger } from "../clients/cosmos";
 import {
@@ -93,7 +97,7 @@ export const getLedgerClient = async <T extends LedgerSupportedChain>({
         Chain.Base,
         Chain.XLayer,
         async () => {
-          const { getProvider } = await import("@swapkit/toolboxes/evm");
+          const { getProvider } = await import("@uswap/toolboxes/evm");
           const params = { derivationPath, provider: await getProvider(chain as EVMChain) };
 
           return match(chain as Chain)
@@ -111,7 +115,7 @@ export const getLedgerClient = async <T extends LedgerSupportedChain>({
         },
       )
       .otherwise(() => {
-        throw new SwapKitError("wallet_chain_not_supported", { chain, wallet: WalletOption.LEDGER });
+        throw new USwapError("wallet_chain_not_supported", { chain, wallet: WalletOption.LEDGER });
       })
   );
 };

@@ -1,4 +1,8 @@
-import { AssetValue, Chain, getChainConfig, SwapKitError } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, Chain, getChainConfig, USwapError } from "@uswap/helpers";
 import { match, P } from "ts-pattern";
 import type { SuiCreateTransactionParams, SuiToolboxParams, SuiTransferParams } from "./types";
 
@@ -37,7 +41,7 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
   async function getBalance(targetAddress?: string) {
     const addressToQuery = targetAddress || getAddress();
     if (!addressToQuery) {
-      throw new SwapKitError("toolbox_sui_address_required" as any);
+      throw new USwapError("toolbox_sui_address_required" as any);
     }
 
     const { baseDecimal: fromBaseDecimal, chain } = getChainConfig(Chain.Sui);
@@ -94,7 +98,7 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
     const senderAddress = sender || getAddress();
 
     if (!senderAddress) {
-      throw new SwapKitError("toolbox_sui_no_sender");
+      throw new USwapError("toolbox_sui_no_sender");
     }
 
     try {
@@ -105,7 +109,7 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
         const [suiCoin] = tx.splitCoins(tx.gas, [assetValue.getBaseValue("string")]);
         tx.transferObjects([suiCoin], recipient);
       } else {
-        throw new SwapKitError("toolbox_sui_custom_token_transfer_not_implemented" as any);
+        throw new USwapError("toolbox_sui_custom_token_transfer_not_implemented" as any);
       }
 
       if (gasBudget) {
@@ -117,7 +121,7 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
 
       return { tx, txBytes };
     } catch (error) {
-      throw new SwapKitError("toolbox_sui_transaction_creation_error" as any, { error });
+      throw new USwapError("toolbox_sui_transaction_creation_error" as any, { error });
     }
   }
 
@@ -125,7 +129,7 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
     params: Uint8Array<ArrayBuffer> | SuiCreateTransactionParams | Awaited<ReturnType<typeof createTransaction>>,
   ) {
     if (!signer) {
-      throw new SwapKitError("toolbox_sui_no_signer");
+      throw new USwapError("toolbox_sui_no_signer");
     }
 
     if (params instanceof Uint8Array) {
@@ -139,12 +143,12 @@ export async function getSuiToolbox({ provider: providerParam, ...signerParams }
 
   async function transfer({ assetValue, gasBudget, recipient }: SuiTransferParams) {
     if (!signer) {
-      throw new SwapKitError("toolbox_sui_no_signer" as any);
+      throw new USwapError("toolbox_sui_no_signer" as any);
     }
 
     const sender = signer.toSuiAddress() || getAddress();
     if (!sender) {
-      throw new SwapKitError("toolbox_sui_no_sender");
+      throw new USwapError("toolbox_sui_no_sender");
     }
 
     const { txBytes } = await createTransaction({ assetValue, gasBudget, recipient, sender });

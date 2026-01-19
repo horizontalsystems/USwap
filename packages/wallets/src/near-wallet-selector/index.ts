@@ -1,9 +1,13 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { Wallet, WalletModuleFactory } from "@near-wallet-selector/core";
 import "@near-wallet-selector/modal-ui-js/styles.css";
 import type { Transaction } from "@near-js/transactions";
-import { Chain, filterSupportedChains, SKConfig, SwapKitError, WalletOption } from "@swapkit/helpers";
-import { getNearToolbox } from "@swapkit/toolboxes/near";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+import { Chain, filterSupportedChains, USwapConfig, USwapError, WalletOption } from "@uswap/helpers";
+import { getNearToolbox } from "@uswap/toolboxes/near";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 
 function createNearSigner(wallet: Wallet) {
   return {
@@ -12,14 +16,14 @@ function createNearSigner(wallet: Wallet) {
       const accountId = accounts[0]?.accountId;
 
       if (!accountId) {
-        throw new SwapKitError("wallet_connection_rejected_by_user");
+        throw new USwapError("wallet_connection_rejected_by_user");
       }
 
       return accountId;
     },
 
     getPublicKey: () => {
-      throw new SwapKitError("wallet_near_method_not_supported");
+      throw new USwapError("wallet_near_method_not_supported");
     },
     signAndSendTransactions: async (transactions: { transactions: Transaction[] }) => {
       const result = await wallet.signAndSendTransactions(transactions);
@@ -27,16 +31,16 @@ function createNearSigner(wallet: Wallet) {
     },
 
     signDelegateAction: () => {
-      throw new SwapKitError("wallet_near_method_not_supported");
+      throw new USwapError("wallet_near_method_not_supported");
     },
 
     signNep413Message: () => {
-      throw new SwapKitError("wallet_near_method_not_supported");
+      throw new USwapError("wallet_near_method_not_supported");
     },
 
     signTransaction: (params: Transaction) => {
       if (!wallet.signTransaction) {
-        throw new SwapKitError("wallet_near_method_not_supported");
+        throw new USwapError("wallet_near_method_not_supported");
       }
       return wallet.signTransaction(params);
     },
@@ -61,7 +65,7 @@ async function getWalletMethods(walletFactories?: WalletModuleFactory[]) {
   const { setupWalletSelector } = await import("@near-wallet-selector/core");
   const { setupModal } = await import("@near-wallet-selector/modal-ui-js");
 
-  const contractId = SKConfig.get("integrations")?.nearWalletSelector?.contractId || "";
+  const contractId = USwapConfig.get("integrations")?.nearWalletSelector?.contractId || "";
   const selector = await setupWalletSelector({ modules: [...(walletFactories || [])], network: "mainnet" });
 
   const isSignedIn = selector.isSignedIn();
@@ -82,7 +86,7 @@ async function getWalletMethods(walletFactories?: WalletModuleFactory[]) {
     try {
       await wallet.signOut();
     } catch (error) {
-      throw new SwapKitError("wallet_connection_rejected_by_user", error);
+      throw new USwapError("wallet_connection_rejected_by_user", error);
     }
   };
 
@@ -95,10 +99,7 @@ export const walletSelectorWallet = createWallet({
       const filteredChains = filterSupportedChains({ chains, supportedChains, walletType });
 
       if (filteredChains.length === 0) {
-        throw new SwapKitError("wallet_chain_not_supported", {
-          chain: chains[0],
-          wallet: WalletOption.WALLET_SELECTOR,
-        });
+        throw new USwapError("wallet_chain_not_supported", { chain: chains[0], wallet: WalletOption.WALLET_SELECTOR });
       }
 
       const walletMethods = await getWalletMethods(walletFactories);

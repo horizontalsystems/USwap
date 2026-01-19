@@ -1,13 +1,17 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   addEVMWalletNetwork,
   Chain,
   filterSupportedChains,
   type NetworkParams,
   prepareNetworkSwitch,
-  SwapKitError,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import { Psbt } from "bitcoinjs-lib";
 import type { BitcoinProvider, GetAddressOptions, GetAddressResponse, SignTransactionOptions } from "sats-connect";
 
@@ -15,10 +19,10 @@ async function getWalletMethodsForExtension(chain: Chain) {
   switch (chain) {
     case Chain.Bitcoin: {
       if (!window.$onekey?.btc) {
-        throw new SwapKitError({ errorKey: "wallet_onekey_not_found", info: { chain } });
+        throw new USwapError({ errorKey: "wallet_onekey_not_found", info: { chain } });
       }
 
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const {
         signTransaction: satsSignTransaction,
         getAddress,
@@ -33,7 +37,7 @@ async function getWalletMethodsForExtension(chain: Chain) {
       const getAddressOptions: GetAddressOptions = {
         getProvider,
         onCancel: () => {
-          throw new SwapKitError("wallet_connection_rejected_by_user");
+          throw new USwapError("wallet_connection_rejected_by_user");
         },
         onFinish: (response: GetAddressResponse) => {
           if (response.addresses[0]?.address) {
@@ -54,7 +58,7 @@ async function getWalletMethodsForExtension(chain: Chain) {
         const signPsbtOptions: SignTransactionOptions = {
           getProvider,
           onCancel: () => {
-            throw new SwapKitError("wallet_connection_rejected_by_user");
+            throw new USwapError("wallet_connection_rejected_by_user");
           },
           onFinish: (response) => {
             signedPsbt = Psbt.fromBase64(response.psbtBase64);
@@ -69,7 +73,7 @@ async function getWalletMethodsForExtension(chain: Chain) {
         };
 
         await satsSignTransaction(signPsbtOptions);
-        if (!signedPsbt) throw new SwapKitError("wallet_onekey_sign_transaction_error");
+        if (!signedPsbt) throw new USwapError("wallet_onekey_sign_transaction_error");
         return signedPsbt;
       }
 
@@ -82,10 +86,10 @@ async function getWalletMethodsForExtension(chain: Chain) {
 
     case Chain.Solana: {
       if (!window.$onekey?.sol) {
-        throw new SwapKitError({ errorKey: "wallet_onekey_not_found", info: { chain } });
+        throw new USwapError({ errorKey: "wallet_onekey_not_found", info: { chain } });
       }
 
-      const { getSolanaToolbox } = await import("@swapkit/toolboxes/solana");
+      const { getSolanaToolbox } = await import("@uswap/toolboxes/solana");
 
       const signer = window.$onekey.sol;
       const address = await signer.getAddress();
@@ -104,9 +108,9 @@ async function getWalletMethodsForExtension(chain: Chain) {
     case Chain.Optimism:
     case Chain.Polygon:
     case Chain.XLayer: {
-      const { getProvider, getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+      const { getProvider, getEvmToolbox } = await import("@uswap/toolboxes/evm");
       if (!window.$onekey?.ethereum) {
-        throw new SwapKitError({ errorKey: "wallet_onekey_not_found", info: { chain } });
+        throw new USwapError({ errorKey: "wallet_onekey_not_found", info: { chain } });
       }
 
       const { BrowserProvider } = await import("ethers");
@@ -125,14 +129,14 @@ async function getWalletMethodsForExtension(chain: Chain) {
           await addEVMWalletNetwork(provider, networkParams);
         }
       } catch (error) {
-        throw new SwapKitError({ errorKey: "wallet_failed_to_add_or_switch_network", info: { chain, error } });
+        throw new USwapError({ errorKey: "wallet_failed_to_add_or_switch_network", info: { chain, error } });
       }
 
       return { address, ...prepareNetworkSwitch({ chain, provider, toolbox }) };
     }
 
     default:
-      throw new SwapKitError({ errorKey: "wallet_chain_not_supported", info: { chain, wallet: WalletOption.ONEKEY } });
+      throw new USwapError({ errorKey: "wallet_chain_not_supported", info: { chain, wallet: WalletOption.ONEKEY } });
   }
 }
 
@@ -140,7 +144,7 @@ export const onekeyWallet = createWallet({
   connect: ({ addChain, walletType, supportedChains }) =>
     async function connectOnekeyWallet(chains: Chain[]) {
       if (!window.$onekey) {
-        throw new SwapKitError({ errorKey: "wallet_onekey_not_found", info: { wallet: WalletOption.ONEKEY } });
+        throw new USwapError({ errorKey: "wallet_onekey_not_found", info: { wallet: WalletOption.ONEKEY } });
       }
 
       const filteredChains = filterSupportedChains({ chains, supportedChains, walletType });

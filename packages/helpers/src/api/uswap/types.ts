@@ -1,5 +1,9 @@
-import { ErrorCode, FeeTypeEnum, ProviderName, WarningCodeEnum } from "@swapkit/helpers";
-import { Chain, ChainId } from "@swapkit/types";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { ErrorCode, FeeTypeEnum, ProviderName, WarningCodeEnum } from "@uswap/helpers";
+import { Chain, ChainId } from "@uswap/types";
 import { array, boolean, coerce, number, object, optional, string, union, unknown, type ZodType, z } from "zod/v4";
 
 export enum PriorityLabel {
@@ -200,7 +204,7 @@ export const QuoteRequestSchema = object({
   cfBoost: optional(boolean().describe("Set to true to enable CF boost to speed up Chainflip swaps. BTC only.")),
   destinationAddress: optional(string().describe("Address to send asset to")),
   disableSecurityChecks: optional(boolean().describe("Disable security checks")),
-  includeTx: optional(boolean().describe("Set to true to include an transaction object (EVM only)")),
+  dry: optional(boolean().describe("Set to false to include an transaction object")),
   providers: optional(
     array(
       string()
@@ -212,6 +216,7 @@ export const QuoteRequestSchema = object({
     ),
   ),
   referrer: optional(string().describe("Referrer address (referral program)")),
+  refundAddress: optional(string().describe("Address to refund")),
   sellAmount: string()
     .describe("Amount of asset to sell")
     .refine((amount) => +amount > 0, { message: "sellAmount must be greater than 0", path: ["sellAmount"] }),
@@ -373,7 +378,6 @@ const TxnMetaSchema = object({
   ),
   provider: optional(z.enum(ProviderName)),
   providerAction: z.optional(z.enum(ProviderAction)),
-  quoteId: optional(string()),
   wallet: optional(string()),
 });
 
@@ -522,7 +526,7 @@ export const RouteQuoteMetadataSchema = object({
   maxStreamingQuantity: number().optional(),
   referrer: string().optional(),
   streamingInterval: number().optional(),
-  tags: array(z.enum(PriorityLabel)),
+  tags: array(z.enum(PriorityLabel)).optional(),
 });
 
 export const RouteQuoteMetadataV2Schema = RouteQuoteMetadataSchema.extend({
@@ -555,26 +559,25 @@ const QuoteResponseRouteLegItem = object({
 
 export const QuoteResponseRouteItem = object({
   buyAsset: string().describe("Asset to buy"),
-  destinationAddress: string().describe("Destination address"),
+  destinationAddress: optional(string().describe("Destination address")),
   estimatedTime: optional(EstimatedTimeSchema),
   expectedBuyAmount: string().describe("Expected Buy amount"),
-  expectedBuyAmountMaxSlippage: string().describe("Expected Buy amount max slippage"),
+  expectedBuyAmountMaxSlippage: optional(string().describe("Expected Buy amount max slippage")),
   expiration: optional(string().describe("Expiration")),
   fees: FeesSchema,
   inboundAddress: optional(string().describe("Inbound address")),
-  legs: array(QuoteResponseRouteLegItem),
+  legs: optional(array(QuoteResponseRouteLegItem)),
   memo: optional(string().describe("Memo")),
-  meta: RouteQuoteMetadataV2Schema,
+  meta: optional(RouteQuoteMetadataV2Schema),
   providers: array(z.enum(ProviderName)),
-  routeId: string().describe("Route ID"),
+  refundAddress: optional(string().describe("Refund address")),
   sellAmount: string().describe("Sell amount"),
   sellAsset: string().describe("Asset to sell"),
-  sourceAddress: string().describe("Source address"),
+  sourceAddress: optional(string().describe("Source address")),
   targetAddress: optional(string().describe("Target address")),
-  totalSlippageBps: number().describe("Total slippage in bps"),
   tx: optional(union([EVMTransactionSchema, CosmosTransactionSchema, string()])),
   txType: optional(z.enum(RouteQuoteTxType)),
-  warnings: RouteQuoteWarningSchema,
+  warnings: optional(RouteQuoteWarningSchema),
 });
 
 export const QuoteResponseSchema = object({
@@ -588,7 +591,6 @@ export const QuoteResponseSchema = object({
       }),
     ),
   ),
-  quoteId: string().describe("Quote ID"),
   routes: array(QuoteResponseRouteItem),
 });
 

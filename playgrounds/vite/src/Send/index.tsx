@@ -1,8 +1,12 @@
-import { type AssetValue, getExplorerTxUrl } from "@swapkit/core";
-import { useCallback, useState } from "react";
-import type { SwapKitClient } from "../swapKitClient";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
 
-export default function Send({ inputAsset, skClient }: { skClient?: SwapKitClient; inputAsset?: AssetValue }) {
+import { type AssetValue, getExplorerTxUrl } from "@uswap/core";
+import { useCallback, useState } from "react";
+import type { USwapClient } from "../uSwapClient";
+
+export default function Send({ inputAsset, skClient }: { skClient?: USwapClient; inputAsset?: AssetValue }) {
   const [inputAssetValue, setInput] = useState(inputAsset?.mul(0));
   const [inputString, setInputString] = useState("");
   const [recipient, setRecipient] = useState("");

@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { ZcashPsbt } from "@bitgo/utxo-lib/dist/src/bitgo";
 import {
   Chain,
@@ -6,12 +10,12 @@ import {
   FeeOption,
   filterSupportedChains,
   type GenericTransferParams,
-  SKConfig,
-  SwapKitError,
+  USwapConfig,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import type { UTXOToolboxes, UTXOType } from "@swapkit/toolboxes/utxo";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import type { UTXOToolboxes, UTXOType } from "@uswap/toolboxes/utxo";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import { type Psbt, script } from "bitcoinjs-lib";
 
 function getScriptType(derivationPath: DerivationPathArray) {
@@ -46,7 +50,7 @@ async function getTrezorWallet<T extends Chain>({
     case Chain.Optimism:
     case Chain.Polygon:
     case Chain.XLayer: {
-      const { getProvider, getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+      const { getProvider, getEvmToolbox } = await import("@uswap/toolboxes/evm");
       const { getEVMSigner } = await import("./evmSigner");
 
       const provider = await getProvider(chain);
@@ -58,7 +62,7 @@ async function getTrezorWallet<T extends Chain>({
     }
 
     case Chain.Zcash: {
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
 
       const derivationPathStr = derivationPathToString(derivationPath);
 
@@ -67,7 +71,7 @@ async function getTrezorWallet<T extends Chain>({
         const { success, payload } = await TrezorConnect.getAddress({ coin: "zcash", path: derivationPathStr });
 
         if (!success) {
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_trezor_failed_to_get_address",
             info: { chain, error: (payload as { error: string; code?: string }).error || "Unknown error" },
           });
@@ -138,7 +142,7 @@ async function getTrezorWallet<T extends Chain>({
             return result.payload.serializedTx;
           }
 
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_trezor_failed_to_sign_transaction",
             info: { chain, error: (result.payload as { error: string; code?: string }).error },
           });
@@ -149,7 +153,7 @@ async function getTrezorWallet<T extends Chain>({
 
       const transfer = async (params: GenericTransferParams) => {
         if (!(address && params.recipient)) {
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_missing_params",
             info: { address, recipient: params.recipient, wallet: WalletOption.TREZOR },
           });
@@ -173,11 +177,11 @@ async function getTrezorWallet<T extends Chain>({
     case Chain.Dash:
     case Chain.Dogecoin:
     case Chain.Litecoin: {
-      const { toCashAddress, getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { toCashAddress, getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const scriptType = getScriptType(derivationPath);
 
       if (!scriptType) {
-        throw new SwapKitError({ errorKey: "wallet_trezor_derivation_path_not_supported", info: { derivationPath } });
+        throw new USwapError({ errorKey: "wallet_trezor_derivation_path_not_supported", info: { derivationPath } });
       }
 
       const coin = chain.toLowerCase();
@@ -187,7 +191,7 @@ async function getTrezorWallet<T extends Chain>({
         const { success, payload } = await TrezorConnect.getAddress({ coin, path: derivationPathToString(path) });
 
         if (!success) {
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_trezor_failed_to_get_address",
             info: { chain, error: (payload as { error: string; code?: string }).error || "Unknown error" },
           });
@@ -241,7 +245,7 @@ async function getTrezorWallet<T extends Chain>({
           return result.payload.serializedTx;
         }
 
-        throw new SwapKitError({
+        throw new USwapError({
           errorKey: "wallet_trezor_failed_to_sign_transaction",
           info: { chain, error: (result.payload as { error: string; code?: string }).error },
         });
@@ -255,7 +259,7 @@ async function getTrezorWallet<T extends Chain>({
         ...rest
       }: GenericTransferParams) => {
         if (!(address && recipient)) {
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_missing_params",
             info: { address, memo, recipient, wallet: WalletOption.TREZOR },
           });
@@ -291,7 +295,7 @@ async function getTrezorWallet<T extends Chain>({
     }
 
     default:
-      throw new SwapKitError({ errorKey: "wallet_chain_not_supported", info: { chain, wallet: WalletOption.TREZOR } });
+      throw new USwapError({ errorKey: "wallet_chain_not_supported", info: { chain, wallet: WalletOption.TREZOR } });
   }
 }
 
@@ -300,20 +304,17 @@ export const trezorWallet = createWallet({
     async function connectTrezor(chains: Chain[], derivationPath: DerivationPathArray) {
       const [chain] = filterSupportedChains({ chains, supportedChains, walletType });
       if (!chain) {
-        throw new SwapKitError({
-          errorKey: "wallet_chain_not_supported",
-          info: { chain, wallet: WalletOption.TREZOR },
-        });
+        throw new USwapError({ errorKey: "wallet_chain_not_supported", info: { chain, wallet: WalletOption.TREZOR } });
       }
 
       const TrezorConnect = (await import("@trezor/connect-web")).default;
       const { success } = await TrezorConnect.getDeviceState();
 
       if (!success) {
-        const trezorConfig = SKConfig.get("integrations").trezor;
+        const trezorConfig = USwapConfig.get("integrations").trezor;
         const manifest = trezorConfig
-          ? { ...trezorConfig, appName: (trezorConfig as any).appName || "SwapKit" }
-          : { appName: "SwapKit", appUrl: "", email: "" };
+          ? { ...trezorConfig, appName: (trezorConfig as any).appName || "USwap" }
+          : { appName: "USwap", appUrl: "", email: "" };
         TrezorConnect.init({ lazyLoad: true, manifest });
       }
 

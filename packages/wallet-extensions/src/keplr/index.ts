@@ -1,5 +1,9 @@
-import { Chain, ChainId, ChainToChainId, filterSupportedChains, SwapKitError, WalletOption } from "@swapkit/helpers";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { Chain, ChainId, ChainToChainId, filterSupportedChains, USwapError, WalletOption } from "@uswap/helpers";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import { chainRegistry } from "./chainRegistry";
 
 const keplrSupportedChainIds = [ChainId.Cosmos, ChainId.Kujira, ChainId.Noble, ChainId.THORChain] as const;
@@ -20,19 +24,19 @@ export const keplrWallet = createWallet({
 
           if (!keplrSupportedChainIds.includes(chainId)) {
             const chainConfig = chainRegistry.get(chainId);
-            if (!chainConfig) throw new SwapKitError("wallet_keplr_chain_not_supported", { chain });
+            if (!chainConfig) throw new USwapError("wallet_keplr_chain_not_supported", { chain });
 
             await keplrClient.experimentalSuggestChain(chainConfig);
           }
 
           keplrClient?.enable(chainId);
           const signer = keplrClient?.getOfflineSignerOnlyAmino(chainId);
-          if (!signer) throw new SwapKitError("wallet_keplr_signer_not_found");
+          if (!signer) throw new USwapError("wallet_keplr_signer_not_found");
 
-          const { getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+          const { getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
 
           const accounts = await signer.getAccounts();
-          if (!accounts?.[0]?.address) throw new SwapKitError("wallet_keplr_no_accounts");
+          if (!accounts?.[0]?.address) throw new USwapError("wallet_keplr_no_accounts");
 
           const [{ address }] = accounts;
           const toolbox = await getCosmosToolbox(chain, { signer });

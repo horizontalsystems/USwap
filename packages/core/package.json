@@ -1,13 +1,13 @@
 {
   "author": "swapkit-oss",
   "dependencies": {
-    "@swapkit/helpers": "workspace:*",
-    "@swapkit/plugins": "workspace:*",
-    "@swapkit/toolboxes": "workspace:*",
-    "@swapkit/wallets": "workspace:*",
+    "@uswap/helpers": "workspace:*",
+    "@uswap/plugins": "workspace:*",
+    "@uswap/toolboxes": "workspace:*",
+    "@uswap/wallets": "workspace:*",
     "ts-pattern": "^5.9.0"
   },
-  "description": "SwapKit - Core",
+  "description": "USwap - Core",
   "devDependencies": { "ts-pattern": "5.9.0" },
   "exports": {
     ".": {
@@ -18,10 +18,14 @@
     }
   },
   "files": ["dist/", "src/"],
-  "homepage": "https://github.com/swapkit/SwapKit",
+  "homepage": "https://github.com/horizontalsystems/USwap",
   "license": "Apache-2.0",
-  "name": "@swapkit/core",
-  "repository": { "directory": "packages/core", "type": "git", "url": "git+https://github.com/swapkit/SwapKit.git" },
+  "name": "@uswap/core",
+  "repository": {
+    "directory": "packages/core",
+    "type": "git",
+    "url": "git+https://github.com/horizontalsystems/USwap.git"
+  },
   "scripts": {
     "build": "bun run ./build.ts",
     "build:clean": "rm -rf dist && bun run ./build.ts",
@@ -32,5 +36,5 @@
     "type-check:go": "tsgo"
   },
   "type": "module",
-  "version": "4.1.11"
+  "version": "4.1.15"
 }

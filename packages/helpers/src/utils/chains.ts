@@ -1,7 +1,11 @@
-import { Chain, CosmosChains, EVMChains, type StagenetChain, StagenetChains, UTXOChains } from "@swapkit/types";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { Chain, CosmosChains, EVMChains, type StagenetChain, StagenetChains, UTXOChains } from "@uswap/types";
 import { match } from "ts-pattern";
-import { SKConfig } from "../modules/swapKitConfig";
-import { SwapKitError } from "../modules/swapKitError";
+import { USwapConfig } from "../modules/uSwapConfig";
+import { USwapError } from "../modules/uSwapError";
 import { warnOnce } from "./others";
 
 function getRpcBody(chain: Chain | StagenetChain) {
@@ -17,7 +21,7 @@ function getRpcBody(chain: Chain | StagenetChain) {
     .with(Chain.Near, () => ({ id: "dontcare", jsonrpc: "2.0", method: "status", params: [] }))
     .with(Chain.Ripple, () => ({ id: 1, jsonrpc: "2.0", method: "ping", params: [{}] }))
     .otherwise(() => {
-      throw new SwapKitError("helpers_chain_not_supported", { chain });
+      throw new USwapError("helpers_chain_not_supported", { chain });
     });
 }
 
@@ -48,8 +52,8 @@ const rpcCache = new Map<Chain | StagenetChain, { timestamp: number; url: string
 const rpcCacheTTL = 1000 * 60 * 2; // 2 minutes
 
 export async function getRPCUrl(chain: Chain | StagenetChain) {
-  const { isStagenet } = SKConfig.get("envs");
-  const [rpcUrl = "", ...fallbackUrls] = SKConfig.get("rpcUrls")[chain];
+  const { isStagenet } = USwapConfig.get("envs");
+  const [rpcUrl = "", ...fallbackUrls] = USwapConfig.get("rpcUrls")[chain];
 
   if (!rpcUrl) {
     warnOnce({
@@ -57,7 +61,7 @@ export async function getRPCUrl(chain: Chain | StagenetChain) {
       id: "helpers_chain_no_public_or_set_rpc_url",
       warning: `No public or set RPC URL found for chain. Please ensure you configured rpcUrls for ${chain}.`,
     });
-    throw new SwapKitError("helpers_chain_no_public_or_set_rpc_url", { chain });
+    throw new USwapError("helpers_chain_no_public_or_set_rpc_url", { chain });
   }
 
   if (isStagenet) return rpcUrl;
@@ -86,8 +90,8 @@ export async function getRPCUrl(chain: Chain | StagenetChain) {
 
 /**
  * @deprecated
- * RPC URLs are now managed dynamically via SKConfig.
- * Please use static { rpcUrls, fallbackRpcUrls } SwapKit init config or dynamic SKConfig.setRpcUrl/setFallbackRpcUrl to configure RPC endpoints.
+ * RPC URLs are now managed dynamically via USwapConfig.
+ * Please use static { rpcUrls, fallbackRpcUrls } USwap init config or dynamic USwapConfig.setRpcUrl/setFallbackRpcUrl to configure RPC endpoints.
  * This function is obsolete and will be removed in a future release.
  */
 export function initializeRPCUrlsWithFallback(_chains: never) {
@@ -95,6 +99,6 @@ export function initializeRPCUrlsWithFallback(_chains: never) {
     condition: true,
     id: "initializeRPCUrlsWithFallback",
     warning:
-      "initializeRPCUrlsWithFallback is deprecated. Use static { rpcUrls, fallbackRpcUrls } SwapKit init config or dynamic SKConfig.setRpcUrl/setFallbackRpcUrl to configure RPC endpoints.",
+      "initializeRPCUrlsWithFallback is deprecated. Use static { rpcUrls, fallbackRpcUrls } USwap init config or dynamic USwapConfig.setRpcUrl/setFallbackRpcUrl to configure RPC endpoints.",
   });
 }

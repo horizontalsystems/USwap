@@ -1,5 +1,9 @@
-import { AssetValue, Chain, ProviderName, SwapKitError, type SwapParams } from "@swapkit/helpers";
-import type { QuoteResponseRoute } from "@swapkit/helpers/api";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, Chain, ProviderName, type SwapParams, USwapError } from "@uswap/helpers";
+import type { QuoteResponseRoute } from "@uswap/helpers/api";
 import { createPlugin } from "../utils";
 
 export const SolanaPlugin = createPlugin({
@@ -11,7 +15,7 @@ export const SolanaPlugin = createPlugin({
       const assetValue = await AssetValue.from({ asset: sellAsset });
 
       const chain = assetValue.chain;
-      if (!(chain === Chain.Solana && tx)) throw new SwapKitError("core_swap_invalid_params");
+      if (!(chain === Chain.Solana && tx)) throw new USwapError("core_swap_invalid_params");
 
       const wallet = getWallet(chain);
       const transaction = VersionedTransaction.deserialize(Buffer.from(tx as string, "base64"));
@@ -22,5 +26,5 @@ export const SolanaPlugin = createPlugin({
     },
   }),
   name: "solana",
-  properties: { supportedSwapkitProviders: [ProviderName.JUPITER] as const },
+  properties: { supportedUSwapProviders: [ProviderName.JUPITER] as const },
 });

@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { StdFee } from "@cosmjs/amino";
 import type { Account } from "@cosmjs/stargate";
 import { base64, bech32 } from "@scure/base";
@@ -16,12 +20,12 @@ import {
   getChainConfig,
   getRPCUrl,
   NetworkDerivationPath,
-  SwapKitError,
-  SwapKitNumber,
   type TCLikeChain,
+  USwapError,
+  USwapNumber,
   updateDerivationPath,
-} from "@swapkit/helpers";
-import { SwapKitApi } from "@swapkit/helpers/api";
+} from "@uswap/helpers";
+import { USwapApi } from "@uswap/helpers/api";
 import { match, P } from "ts-pattern";
 import type { CosmosToolboxParams } from "../types";
 import {
@@ -35,7 +39,7 @@ import {
 
 export async function fetchFeeRateFromSwapKit(chainId: ChainId, safeDefault: number) {
   try {
-    const response = await SwapKitApi.getGasRate();
+    const response = await USwapApi.getGasRate();
     const responseGasRate = response.find((gas) => gas.chainId === chainId)?.value;
 
     return responseGasRate ? Number.parseFloat(responseGasRate) : safeDefault;
@@ -91,7 +95,7 @@ export function verifySignature(getAccount: (address: string) => Promise<Account
     address: string;
   }) {
     const account = await getAccount(address);
-    if (!account?.pubkey) throw new SwapKitError("toolbox_cosmos_verify_signature_no_pubkey");
+    if (!account?.pubkey) throw new USwapError("toolbox_cosmos_verify_signature_no_pubkey");
 
     const importedCrypto = await import("@cosmjs/crypto");
     const Secp256k1Signature = importedCrypto.Secp256k1Signature ?? importedCrypto.default?.Secp256k1Signature;
@@ -131,7 +135,7 @@ export async function createCosmosToolbox({ chain, ...toolboxParams }: CosmosToo
   async function getPubKey() {
     const [account] = (await signer?.getAccounts()) || [];
     if (!account?.pubkey) {
-      throw new SwapKitError("toolbox_cosmos_signer_not_defined");
+      throw new USwapError("toolbox_cosmos_signer_not_defined");
     }
     return base64.encode(account?.pubkey);
   }
@@ -146,7 +150,7 @@ export async function createCosmosToolbox({ chain, ...toolboxParams }: CosmosToo
     const from = await getAddress();
 
     if (!(signer && from)) {
-      throw new SwapKitError("toolbox_cosmos_signer_not_defined");
+      throw new USwapError("toolbox_cosmos_signer_not_defined");
     }
 
     const feeAssetValue = AssetValue.from({ chain });
@@ -187,7 +191,7 @@ export async function createCosmosToolbox({ chain, ...toolboxParams }: CosmosToo
     const from = await getAddress();
 
     if (!(signer && from)) {
-      throw new SwapKitError("toolbox_cosmos_signer_not_defined");
+      throw new USwapError("toolbox_cosmos_signer_not_defined");
     }
 
     const feeAssetValue = AssetValue.from({ chain });
@@ -260,7 +264,7 @@ export async function createCosmosToolbox({ chain, ...toolboxParams }: CosmosToo
 
 export async function getFeeRateFromSwapKit(chainId: ChainId, safeDefault: number) {
   try {
-    const response = await SwapKitApi.getGasRate();
+    const response = await USwapApi.getGasRate();
     const responseGasRate = response.find((gas) => gas.chainId === chainId)?.value;
 
     return responseGasRate ? Number.parseFloat(responseGasRate) : safeDefault;
@@ -278,13 +282,13 @@ async function getFees(chain: Chain, safeDefault: number) {
 
   const baseFee = await fetchFeeRateFromSwapKit(chainId, safeDefault);
   return {
-    average: SwapKitNumber.fromBigInt(BigInt(baseFee), baseDecimal),
-    fast: SwapKitNumber.fromBigInt(BigInt(applyFeeMultiplier(baseFee, FeeOption.Fast, true)), baseDecimal),
-    fastest: SwapKitNumber.fromBigInt(BigInt(applyFeeMultiplier(baseFee, FeeOption.Fastest, true)), baseDecimal),
-  } as { [key in FeeOption]: SwapKitNumber };
+    average: USwapNumber.fromBigInt(BigInt(baseFee), baseDecimal),
+    fast: USwapNumber.fromBigInt(BigInt(applyFeeMultiplier(baseFee, FeeOption.Fast, true)), baseDecimal),
+    fastest: USwapNumber.fromBigInt(BigInt(applyFeeMultiplier(baseFee, FeeOption.Fastest, true)), baseDecimal),
+  } as { [key in FeeOption]: USwapNumber };
 }
 
-function feeToStdFee(fee: SwapKitNumber, denom: string): StdFee {
+function feeToStdFee(fee: USwapNumber, denom: string): StdFee {
   return { amount: [{ amount: fee.getBaseValue("string"), denom }], gas: "200000" };
 }
 

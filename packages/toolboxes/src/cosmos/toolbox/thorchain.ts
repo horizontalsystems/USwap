@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { Pubkey, Secp256k1HdWallet } from "@cosmjs/amino";
 import { base64 } from "@scure/base";
 import {
@@ -10,12 +14,12 @@ import {
   getRPCUrl,
   NetworkDerivationPath,
   RequestClient,
-  SKConfig,
-  SwapKitError,
-  SwapKitNumber,
   type TCLikeChain,
+  USwapConfig,
+  USwapError,
+  USwapNumber,
   updateDerivationPath,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 
 import { match, P } from "ts-pattern";
 import {
@@ -135,7 +139,7 @@ async function signWithPrivateKey({ privateKey, message }: { privateKey: Uint8Ar
 export async function createThorchainToolbox({ chain, ...toolboxParams }: CosmosToolboxParams<TCLikeChain>) {
   const rpcUrl = await getRPCUrl(chain);
   const { nodeUrl } = getChainConfig(chain);
-  const { isStagenet } = SKConfig.get("envs");
+  const { isStagenet } = USwapConfig.get("envs");
   const isThorchain = chain === Chain.THORChain;
   const chainPrefix = `${isStagenet ? "s" : ""}${CosmosChainPrefixes[chain]}`;
 
@@ -156,7 +160,7 @@ export async function createThorchainToolbox({ chain, ...toolboxParams }: Cosmos
   const defaultFee = getDefaultChainFee(chain);
 
   async function getFees() {
-    let fee: SwapKitNumber;
+    let fee: USwapNumber;
 
     const constantsUrl = `${nodeUrl}/${isThorchain ? "thorchain" : "mayachain"}/constants`;
 
@@ -166,12 +170,12 @@ export async function createThorchainToolbox({ chain, ...toolboxParams }: Cosmos
       } = await RequestClient.get<ThorchainConstantsResponse>(constantsUrl);
 
       if (!nativeFee || Number.isNaN(nativeFee) || nativeFee < 0) {
-        throw new SwapKitError("toolbox_cosmos_invalid_fee", { nativeFee: nativeFee.toString() });
+        throw new USwapError("toolbox_cosmos_invalid_fee", { nativeFee: nativeFee.toString() });
       }
 
-      fee = new SwapKitNumber(nativeFee);
+      fee = new USwapNumber(nativeFee);
     } catch {
-      fee = new SwapKitNumber({ decimal: getChainConfig(chain).baseDecimal, value: isThorchain ? 0.02 : 1 });
+      fee = new USwapNumber({ decimal: getChainConfig(chain).baseDecimal, value: isThorchain ? 0.02 : 1 });
     }
 
     return { [FeeOption.Average]: fee, [FeeOption.Fast]: fee, [FeeOption.Fastest]: fee };
@@ -184,7 +188,7 @@ export async function createThorchainToolbox({ chain, ...toolboxParams }: Cosmos
   }: Omit<GenericTransferParams, "recipient"> & { recipient?: string }) {
     const { TxRaw } = await import("cosmjs-types/cosmos/tx/v1beta1/tx");
     const sender = (await signer?.getAccounts())?.[0]?.address;
-    if (!(sender && signer)) throw new SwapKitError("toolbox_cosmos_no_signer");
+    if (!(sender && signer)) throw new USwapError("toolbox_cosmos_no_signer");
 
     const isAminoSigner = "signAmino" in signer;
     const registry = await createDefaultRegistry();

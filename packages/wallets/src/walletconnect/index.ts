@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { StdSignDoc } from "@cosmjs/amino";
 import type { Transaction } from "@near-js/transactions";
 import {
@@ -5,14 +9,14 @@ import {
   filterSupportedChains,
   type GenericTransferParams,
   getRPCUrl,
-  SKConfig,
-  SwapKitError,
+  USwapConfig,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import type { ThorchainDepositParams } from "@swapkit/toolboxes/cosmos";
-import type { NearSigner } from "@swapkit/toolboxes/near";
-import type { TronSignedTransaction, TronSigner, TronTransaction } from "@swapkit/toolboxes/tron";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import type { ThorchainDepositParams } from "@uswap/toolboxes/cosmos";
+import type { NearSigner } from "@uswap/toolboxes/near";
+import type { TronSignedTransaction, TronSigner, TronTransaction } from "@uswap/toolboxes/tron";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import type { WalletConnectModal } from "@walletconnect/modal";
 import type { SignClient } from "@walletconnect/sign-client";
 import type { SessionTypes, SignClientTypes } from "@walletconnect/types";
@@ -34,16 +38,16 @@ export const walletconnectWallet = createWallet({
   connect: ({ addChain, supportedChains, walletType }) =>
     async function connectWalletconnect(chains: Chain[], walletconnectOptions?: SignClientTypes.Options) {
       const filteredChains = filterSupportedChains({ chains, supportedChains, walletType });
-      const { walletConnectProjectId } = SKConfig.get("apiKeys");
+      const { walletConnectProjectId } = USwapConfig.get("apiKeys");
 
       if (!walletConnectProjectId) {
-        throw new SwapKitError("wallet_walletconnect_project_id_not_specified");
+        throw new USwapError("wallet_walletconnect_project_id_not_specified");
       }
 
       const walletconnect = await getWalletconnect(filteredChains, walletConnectProjectId, walletconnectOptions);
 
       if (!walletconnect) {
-        throw new SwapKitError("wallet_walletconnect_connection_not_established");
+        throw new USwapError("wallet_walletconnect_connection_not_established");
       }
 
       const { accounts } = walletconnect;
@@ -102,7 +106,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
 }) {
   const session = walletconnect?.session;
   if (!session) {
-    throw new SwapKitError("wallet_walletconnect_connection_not_established");
+    throw new USwapError("wallet_walletconnect_connection_not_established");
   }
 
   switch (chain) {
@@ -115,7 +119,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
     case Chain.Optimism:
     case Chain.Polygon:
     case Chain.XLayer: {
-      const { getProvider, getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+      const { getProvider, getEvmToolbox } = await import("@uswap/toolboxes/evm");
 
       const provider = await getProvider(chain);
       const signer = await getEVMSigner({ chain, provider, walletconnect });
@@ -142,7 +146,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
         fromBase64,
         getDefaultChainFee,
         parseAminoMessageForDirectSigning,
-      } = await import("@swapkit/toolboxes/cosmos");
+      } = await import("@uswap/toolboxes/cosmos");
       const toolbox = await getCosmosToolbox(chain);
 
       const fee = getDefaultChainFee(chain);
@@ -157,11 +161,11 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
       async function thorchainTransfer({ assetValue, memo, ...rest }: GenericTransferParams | ThorchainDepositParams) {
         const account = await toolbox.getAccount(address);
         if (!account) {
-          throw new SwapKitError({ errorKey: "wallet_missing_params", info: { account } });
+          throw new USwapError({ errorKey: "wallet_missing_params", info: { account } });
         }
 
         if (!account.pubkey) {
-          throw new SwapKitError({ errorKey: "wallet_missing_params", info: { account, pubkey: account?.pubkey } });
+          throw new USwapError({ errorKey: "wallet_missing_params", info: { account, pubkey: account?.pubkey } });
         }
 
         const { accountNumber, sequence = 0 } = account;
@@ -217,7 +221,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
     }
 
     case Chain.Near: {
-      const { getNearToolbox } = await import("@swapkit/toolboxes/near");
+      const { getNearToolbox } = await import("@uswap/toolboxes/near");
       const { DEFAULT_NEAR_METHODS } = await import("./constants");
 
       // Create a NEAR signer that uses WalletConnect
@@ -228,13 +232,13 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
         getPublicKey() {
           // WalletConnect NEAR doesn't expose public key directly
           return Promise.reject(
-            new SwapKitError("wallet_walletconnect_method_not_supported", { method: "getPublicKey" }),
+            new USwapError("wallet_walletconnect_method_not_supported", { method: "getPublicKey" }),
           );
         },
 
         signDelegateAction(_delegateAction: any) {
           return Promise.reject(
-            new SwapKitError("wallet_walletconnect_method_not_supported", { method: "signDelegateAction" }),
+            new USwapError("wallet_walletconnect_method_not_supported", { method: "signDelegateAction" }),
           );
         },
 
@@ -247,13 +251,13 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
         ) {
           // WalletConnect NEAR spec doesn't include NEP-413 message signing
           return Promise.reject(
-            new SwapKitError("wallet_walletconnect_method_not_supported", { method: "signNep413Message" }),
+            new USwapError("wallet_walletconnect_method_not_supported", { method: "signNep413Message" }),
           );
         },
 
         async signTransaction(transaction: Transaction) {
           if (!walletconnect) {
-            throw new SwapKitError("wallet_walletconnect_connection_not_established");
+            throw new USwapError("wallet_walletconnect_connection_not_established");
           }
           // WalletConnect signs and sends in one operation
           const result = await walletconnect.client.request({
@@ -271,7 +275,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
     }
 
     case Chain.Tron: {
-      const { createTronToolbox } = await import("@swapkit/toolboxes/tron");
+      const { createTronToolbox } = await import("@uswap/toolboxes/tron");
       const { DEFAULT_TRON_METHODS } = await import("./constants");
 
       // Create a Tron signer that uses WalletConnect
@@ -282,7 +286,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
 
         async signTransaction(transaction: TronTransaction) {
           if (!walletconnect) {
-            throw new SwapKitError("wallet_walletconnect_connection_not_established");
+            throw new USwapError("wallet_walletconnect_connection_not_established");
           }
 
           const signedTx = await walletconnect.client.request({
@@ -300,7 +304,7 @@ async function getToolbox<T extends (typeof WC_SUPPORTED_CHAINS)[number]>({
     }
 
     default:
-      throw new SwapKitError({
+      throw new USwapError({
         errorKey: "wallet_chain_not_supported",
         info: { chain, wallet: WalletOption.WALLETCONNECT },
       });
@@ -377,7 +381,7 @@ async function getWalletconnect(
     };
 
     if (!session) {
-      throw new SwapKitError("wallet_walletconnect_connection_not_established");
+      throw new USwapError("wallet_walletconnect_connection_not_established");
     }
 
     return { accounts, client, disconnect, session, signer };

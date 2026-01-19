@@ -1,5 +1,9 @@
-export * from "@swapkit/tokens";
-export * from "@swapkit/types";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+export * from "@uswap/tokens";
+export * from "@uswap/types";
 /**
  * Modules
  */
@@ -7,9 +11,9 @@ export * from "./modules/assetValue";
 export * from "./modules/bigIntArithmetics";
 export * from "./modules/feeMultiplier";
 export * from "./modules/requestClient";
-export * from "./modules/swapKitConfig";
-export * from "./modules/swapKitError";
-export * from "./modules/swapKitNumber";
+export * from "./modules/uSwapConfig";
+export * from "./modules/uSwapError";
+export * from "./modules/uSwapNumber";
 /**
  * Types
  */

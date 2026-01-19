@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   Chain,
   type CosmosChain,
@@ -5,14 +9,14 @@ import {
   filterSupportedChains,
   type GenericTransferParams,
   type SubstrateChain,
-  SwapKitError,
   type TCLikeChain,
+  USwapError,
   type UTXOChain,
   UTXOChains,
   WalletOption,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import {
   getVultisigAddress,
   getVultisigMethods,
@@ -88,15 +92,15 @@ async function getWalletMethods(chain: (typeof VULTISIG_SUPPORTED_CHAINS)[number
   const { match } = await import("ts-pattern");
   return match(chain)
     .with(Chain.Solana, async () => {
-      const { getSolanaToolbox } = await import("@swapkit/toolboxes/solana");
+      const { getSolanaToolbox } = await import("@uswap/toolboxes/solana");
       const solanaProvider = window.vultisig?.solana;
-      if (!solanaProvider) throw new SwapKitError("wallet_vultisig_not_found");
+      if (!solanaProvider) throw new USwapError("wallet_vultisig_not_found");
       const toolbox = await getSolanaToolbox({ signer: solanaProvider });
       return { ...toolbox };
     })
 
     .with(Chain.Maya, Chain.THORChain, async () => {
-      const { getCosmosToolbox, THORCHAIN_GAS_VALUE, MAYA_GAS_VALUE } = await import("@swapkit/toolboxes/cosmos");
+      const { getCosmosToolbox, THORCHAIN_GAS_VALUE, MAYA_GAS_VALUE } = await import("@uswap/toolboxes/cosmos");
       const gasLimit = chain === Chain.Maya ? MAYA_GAS_VALUE : THORCHAIN_GAS_VALUE;
       const toolbox = await getCosmosToolbox(chain as Exclude<CosmosChain, TCLikeChain | Chain.Harbor>);
       return {
@@ -107,14 +111,14 @@ async function getWalletMethods(chain: (typeof VULTISIG_SUPPORTED_CHAINS)[number
     })
 
     .with(Chain.Cosmos, Chain.Kujira, async () => {
-      const { getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+      const { getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
       const provider = await getVultisigProvider(chain as Exclude<CosmosChain, TCLikeChain>);
       const toolbox = await getCosmosToolbox(chain as Exclude<CosmosChain, TCLikeChain | Chain.Harbor>);
       return prepareNetworkSwitchCosmos({ chain, provider, toolbox: { ...toolbox, transfer: walletTransfer } });
     })
 
     .with(...UTXOChains, async () => {
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const toolbox = await getUtxoToolbox(chain as UTXOChain);
       return { ...toolbox, transfer: walletTransfer };
     })
@@ -129,13 +133,13 @@ async function getWalletMethods(chain: (typeof VULTISIG_SUPPORTED_CHAINS)[number
       Chain.Polygon,
       Chain.XLayer,
       async () => {
-        const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@swapkit/helpers");
-        const { getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+        const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@uswap/helpers");
+        const { getEvmToolbox } = await import("@uswap/toolboxes/evm");
         const { BrowserProvider } = await import("ethers");
         const ethereumWindowProvider = await getVultisigProvider(chain as EVMChain);
 
         if (!ethereumWindowProvider) {
-          throw new SwapKitError("wallet_vultisig_not_found");
+          throw new USwapError("wallet_vultisig_not_found");
         }
 
         const provider = new BrowserProvider(ethereumWindowProvider, "any");
@@ -149,7 +153,7 @@ async function getWalletMethods(chain: (typeof VULTISIG_SUPPORTED_CHAINS)[number
             await switchEVMWalletNetwork(provider, chain, networkParams);
           }
         } catch {
-          throw new SwapKitError({
+          throw new USwapError({
             errorKey: "wallet_failed_to_add_or_switch_network",
             info: { chain, wallet: WalletOption.VULTISIG },
           });
@@ -160,13 +164,13 @@ async function getWalletMethods(chain: (typeof VULTISIG_SUPPORTED_CHAINS)[number
     )
 
     .with(Chain.Ripple, async () => {
-      const { getRippleToolbox } = await import("@swapkit/toolboxes/ripple");
+      const { getRippleToolbox } = await import("@uswap/toolboxes/ripple");
       const toolbox = await getRippleToolbox();
       return { ...toolbox, transfer: walletTransfer };
     })
 
     .with(Chain.Polkadot, async () => {
-      const { getSubstrateToolbox } = await import("@swapkit/toolboxes/substrate");
+      const { getSubstrateToolbox } = await import("@uswap/toolboxes/substrate");
       const toolbox = await getSubstrateToolbox(chain as SubstrateChain);
       return { ...toolbox, transfer: walletTransfer };
     })

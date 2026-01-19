@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   type Chain,
   type EVMChain,
@@ -5,11 +9,11 @@ import {
   filterSupportedChains,
   getChainConfig,
   prepareNetworkSwitch,
-  SwapKitError,
   switchEVMWalletNetwork,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import type { BrowserProvider, Eip1193Provider } from "ethers";
 
 export type EVMWalletOptions =
@@ -50,8 +54,8 @@ export const getWeb3WalletMethods = async ({
   chain: EVMChain;
   provider: BrowserProvider;
 }) => {
-  if (!walletProvider) throw new SwapKitError("wallet_evm_extensions_not_found");
-  const { getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+  if (!walletProvider) throw new USwapError("wallet_evm_extensions_not_found");
+  const { getEvmToolbox } = await import("@uswap/toolboxes/evm");
 
   const signer = await provider.getSigner();
   const toolbox = await getEvmToolbox(chain, { provider, signer });
@@ -63,7 +67,7 @@ export const getWeb3WalletMethods = async ({
       const networkParams = toolbox.getNetworkParams();
       await switchEVMWalletNetwork(provider, chain, networkParams);
     } catch {
-      throw new SwapKitError("wallet_evm_extensions_failed_to_switch_network", { chain });
+      throw new USwapError("wallet_evm_extensions_failed_to_switch_network", { chain });
     }
   }
 
@@ -87,7 +91,7 @@ export const evmWallet = createWallet({
       await Promise.all(
         filteredChains.map(async (chain) => {
           if (walletType === WalletOption.EIP6963 && !eip1193Provider)
-            throw new SwapKitError("wallet_evm_extensions_no_provider");
+            throw new USwapError("wallet_evm_extensions_no_provider");
 
           const windowProvider = eip1193Provider || getWalletForType(walletType);
           const browserProvider = new BrowserProvider(windowProvider, "any");

@@ -30,9 +30,9 @@
     "@solana/spl-memo": "~0.2.5",
     "@solana/spl-token": "~0.4.14",
     "@solana/web3.js": "~1.98.0",
-    "@swapkit/helpers": "workspace:*",
     "@ton/crypto": "~3.3.0",
     "@ton/ton": "~15.4.0",
+    "@uswap/helpers": "workspace:*",
     "base64-js": "~1.5.1",
     "bitcoinjs-lib": "~6.1.0",
     "bs58check": "~4.0.0",
@@ -49,7 +49,7 @@
     "ts-pattern": "^5.9.0",
     "xrpl": "~4.4.2"
   },
-  "description": "SwapKit - Toolboxes",
+  "description": "USwap - Toolboxes",
   "devDependencies": {
     "@bitcoinerlab/secp256k1": "1.2.0",
     "@bitgo/utxo-lib": "11.16.1",
@@ -187,10 +187,10 @@
     }
   },
   "files": ["dist/", "src/"],
-  "homepage": "https://github.com/swapkit/SwapKit",
+  "homepage": "https://github.com/horizontalsystems/USwap",
   "license": "Apache-2.0",
-  "name": "@swapkit/toolboxes",
-  "repository": { "type": "git", "url": "git+https://github.com/swapkit/SwapKit.git" },
+  "name": "@uswap/toolboxes",
+  "repository": { "type": "git", "url": "git+https://github.com/horizontalsystems/USwap.git" },
   "scripts": {
     "build": "bun run ./build.ts",
     "build:clean": "rm -rf dist && bun run ./build.ts",
@@ -201,5 +201,5 @@
     "type-check:go": "tsgo"
   },
   "type": "module",
-  "version": "4.3.10"
+  "version": "4.3.14"
 }

@@ -1,5 +1,9 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { base64 } from "@scure/base";
-import { type DerivationPathArray, NetworkDerivationPath, SwapKitError } from "@swapkit/helpers";
+import { type DerivationPathArray, NetworkDerivationPath, USwapError } from "@uswap/helpers";
 
 import { CosmosLedgerInterface } from "../../interfaces/CosmosLedgerInterface";
 import type { GetAddressAndPubKeyResponse } from "../../types";
@@ -60,7 +64,7 @@ export class THORChainLedger extends CosmosLedgerInterface {
 
     const { return_code, error_message, signature } = await this.ledgerApp.sign(this.derivationPath, rawTx);
 
-    if (!this.pubKey) throw new SwapKitError("wallet_ledger_pubkey_not_found");
+    if (!this.pubKey) throw new USwapError("wallet_ledger_pubkey_not_found");
 
     this.validateResponse(return_code, error_message);
 
@@ -78,7 +82,7 @@ export class THORChainLedger extends CosmosLedgerInterface {
 
     const { return_code, error_message, signature } = await this.ledgerApp.sign(this.derivationPath, message);
 
-    if (!this.pubKey) throw new SwapKitError("wallet_ledger_pubkey_not_found");
+    if (!this.pubKey) throw new USwapError("wallet_ledger_pubkey_not_found");
 
     this.validateResponse(return_code, error_message);
 

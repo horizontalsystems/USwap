@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type {
   FungibleResourcesCollectionItem,
   GatewayApiClient,
@@ -5,7 +9,7 @@ import type {
   StateEntityFungiblesPageRequest,
   StateEntityFungiblesPageResponse,
 } from "@radixdlt/babylon-gateway-api-sdk";
-import { AssetValue, Chain, SKConfig, type SKConfigIntegrations, SwapKitError } from "@swapkit/helpers";
+import { AssetValue, Chain, USwapConfig, type USwapConfigIntegrations, USwapError } from "@uswap/helpers";
 
 export type RadixWallet = Awaited<ReturnType<typeof RadixToolbox>>;
 
@@ -117,10 +121,10 @@ function currentStateVersion(networkApi: GatewayApiClient) {
   return networkApi.status.getCurrent().then((status) => status.ledger_state.state_version);
 }
 
-export const RadixToolbox = async ({ dappConfig }: { dappConfig?: SKConfigIntegrations["radix"] } = {}) => {
+export const RadixToolbox = async ({ dappConfig }: { dappConfig?: USwapConfigIntegrations["radix"] } = {}) => {
   const { RadixDappToolkit } = await import("@radixdlt/radix-dapp-toolkit");
   const { GatewayApiClient } = await import("@radixdlt/babylon-gateway-api-sdk");
-  const config = dappConfig || SKConfig.get("integrations").radix;
+  const config = dappConfig || USwapConfig.get("integrations").radix;
 
   const radixToolkit = RadixDappToolkit({ ...config, networkId: config.network?.networkId || 1 });
 
@@ -131,7 +135,7 @@ export const RadixToolbox = async ({ dappConfig }: { dappConfig?: SKConfigIntegr
     getBalance: getBalance({ networkApi }),
     networkApi,
     signAndBroadcast: (() => {
-      throw new SwapKitError("toolbox_radix_method_not_supported", { method: "signAndBroadcast" });
+      throw new USwapError("toolbox_radix_method_not_supported", { method: "signAndBroadcast" });
     }) as (params: any) => Promise<string>,
     validateAddress: radixValidateAddress,
   };

@@ -1,7 +1,11 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { KeyPair } from "@near-js/crypto";
 import type { Provider } from "@near-js/providers";
 import { KeyPairSigner } from "@near-js/signers";
-import { type DerivationPathArray, derivationPathToString, SwapKitError } from "@swapkit/helpers";
+import { type DerivationPathArray, derivationPathToString, USwapError } from "@uswap/helpers";
 import type { NearSigner } from "../types";
 
 export async function getValidateNearAddress() {
@@ -74,7 +78,7 @@ export async function getFullAccessPublicKey(provider: Provider, accountId: stri
   const fullAccessKey = (response as any).keys.find((key: any) => key.access_key.permission === "FullAccess");
 
   if (!fullAccessKey) {
-    throw new SwapKitError("toolbox_near_no_public_key_found");
+    throw new USwapError("toolbox_near_no_public_key_found");
   }
   const { PublicKey } = await import("@near-js/crypto");
 

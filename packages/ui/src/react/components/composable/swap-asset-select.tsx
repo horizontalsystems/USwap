@@ -1,13 +1,17 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 "use client";
 
-import { AllChains, type Chain } from "@swapkit/sdk";
+import { AllChains, type Chain } from "@uswap/sdk";
 import { SearchIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { match } from "ts-pattern";
 import { cn, formatCurrency } from "../../../lib/utils";
 import { useFilteredSortedAssets } from "../../hooks/use-filtered-sorted-assets";
 import { showModal } from "../../hooks/use-modal";
-import { useSwapKit } from "../../swapkit-context";
+import { useUSwap } from "../../uswap-context";
 import { ChainIcon } from "../chain-icon";
 import { WalletConnectDialog } from "../dialogs/wallet-connect-dialog";
 import { Button } from "../ui/button";
@@ -25,7 +29,7 @@ export function SwapAssetSelect({
   const [isNetworkListExpanded, setIsNetworkListExpanded] = useState(false);
   const [selectedNetworks, setSelectedNetworks] = useState<Chain[]>([]);
   const [open, setOpen] = useState(false);
-  const { isWalletConnected } = useSwapKit();
+  const { isWalletConnected } = useUSwap();
 
   const { assets, filters, setFilters } = useFilteredSortedAssets();
 

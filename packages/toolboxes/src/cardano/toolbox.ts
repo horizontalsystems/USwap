@@ -1,4 +1,8 @@
-import { AssetValue, Chain, type DerivationPathArray, getChainConfig, SwapKitError } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, Chain, type DerivationPathArray, getChainConfig, USwapError } from "@uswap/helpers";
 import { match, P } from "ts-pattern";
 import type { CardanoProvider } from "./index";
 
@@ -91,7 +95,7 @@ export async function getCardanoToolbox(
 
   function getBalance(addressParam?: string) {
     const address = addressParam || getAddress();
-    if (!address) throw new SwapKitError("core_wallet_connection_not_found");
+    if (!address) throw new USwapError("core_wallet_connection_not_found");
     return getCardanoBalance(address);
   }
 
@@ -109,12 +113,12 @@ export async function getCardanoToolbox(
     memo?: string;
   }) {
     if (!signer || !("getChangeAddress" in signer)) {
-      throw new SwapKitError("core_wallet_connection_not_found");
+      throw new USwapError("core_wallet_connection_not_found");
     }
     const { Transaction } = await import("@meshsdk/core");
 
     const [, policyId] = assetValue.symbol.split("-");
-    if (!assetValue.isGasAsset && !policyId) throw new SwapKitError("core_wallet_connection_not_found");
+    if (!assetValue.isGasAsset && !policyId) throw new USwapError("core_wallet_connection_not_found");
 
     const tx = new Transaction({ initiator: signer });
     tx.sendAssets({ address: recipient }, [
@@ -129,7 +133,7 @@ export async function getCardanoToolbox(
 
   function signTransaction(txParams: string) {
     if (!signer || !("getChangeAddress" in signer)) {
-      throw new SwapKitError("core_wallet_connection_not_found");
+      throw new USwapError("core_wallet_connection_not_found");
     }
 
     return signer.signTx(txParams);
@@ -145,7 +149,7 @@ export async function getCardanoToolbox(
     memo?: string;
   }) {
     if (!signer || !("getChangeAddress" in signer)) {
-      throw new SwapKitError("core_wallet_connection_not_found");
+      throw new USwapError("core_wallet_connection_not_found");
     }
 
     const { unsignedTx } = await createTransaction({ assetValue, memo, recipient });

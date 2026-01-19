@@ -1,5 +1,9 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { TxBodyEncodeObject } from "@cosmjs/proto-signing";
-import { AssetValue, Chain, getChainConfig, SwapKitError, type TCLikeChain } from "@swapkit/helpers";
+import { AssetValue, Chain, getChainConfig, type TCLikeChain, USwapError } from "@uswap/helpers";
 
 import { createStargateClient, getDefaultChainFee, getDenomWithChain, getMsgSendDenom } from "../util";
 
@@ -84,7 +88,7 @@ const getAccount = async ({ rpcUrl, sender }: { sender: string; rpcUrl: string }
   const account = await client.getAccount(sender);
 
   if (!account) {
-    throw new SwapKitError("toolbox_cosmos_account_not_found", { sender });
+    throw new USwapError("toolbox_cosmos_account_not_found", { sender });
   }
 
   return account;

@@ -1,6 +1,10 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { CoinbaseWalletProvider } from "@coinbase/wallet-sdk";
 import type { createCoinbaseWalletSDK } from "@coinbase/wallet-sdk/dist/createCoinbaseWalletSDK.js";
-import { Chain, SwapKitError } from "@swapkit/helpers";
+import { Chain, USwapError } from "@uswap/helpers";
 import type { Provider } from "ethers";
 
 async function getCoinbaseMobileSigner(walletProvider: CoinbaseWalletProvider, provider?: Provider) {
@@ -17,7 +21,7 @@ async function getCoinbaseMobileSigner(walletProvider: CoinbaseWalletProvider, p
     async getAddress() {
       const accounts = await this.#coinbaseProvider.request<string[]>({ method: "eth_requestAccounts" });
 
-      if (!accounts[0]) throw new SwapKitError("wallet_coinbase_no_accounts");
+      if (!accounts[0]) throw new USwapError("wallet_coinbase_no_accounts");
 
       return accounts[0];
     }
@@ -34,7 +38,7 @@ async function getCoinbaseMobileSigner(walletProvider: CoinbaseWalletProvider, p
     }
 
     signTypedData = () => {
-      throw new SwapKitError("wallet_coinbase_method_not_supported", { method: "signTypedData" });
+      throw new USwapError("wallet_coinbase_method_not_supported", { method: "signTypedData" });
     };
 
     connect(provider: Provider) {
@@ -61,7 +65,7 @@ export const getWalletMethods = async ({
     case Chain.Base:
     case Chain.BinanceSmartChain: {
       const walletProvider = coinbaseSdk.getProvider() as CoinbaseWalletProvider;
-      const { getEvmToolbox, getProvider } = await import("@swapkit/toolboxes/evm");
+      const { getEvmToolbox, getProvider } = await import("@uswap/toolboxes/evm");
 
       const provider = await getProvider(chain);
       const signer = await getCoinbaseMobileSigner(walletProvider, provider);
@@ -72,6 +76,6 @@ export const getWalletMethods = async ({
     }
 
     default:
-      throw new SwapKitError("wallet_coinbase_chain_not_supported", { chain });
+      throw new USwapError("wallet_coinbase_chain_not_supported", { chain });
   }
 };

@@ -1,11 +1,12 @@
+{/* Modifications © 2025 Horizontal Systems. */}
 ---
 title: NEAR Integration
-description: Complete guide to integrating NEAR Protocol with SwapKit
+description: Complete guide to integrating NEAR Protocol with USwap
 ---
 
 import { Tabs, TabItem, Code } from "@astrojs/starlight/components";
 
-This guide covers the NEAR Protocol integration in SwapKit, including the NEAR toolbox for direct blockchain operations and the NEAR plugin for enhanced features like NEAR Names service.
+This guide covers the NEAR Protocol integration in USwap, including the NEAR toolbox for direct blockchain operations and the NEAR plugin for enhanced features like NEAR Names service.
 
 ## Overview
 
@@ -23,10 +24,10 @@ The NEAR integration provides:
 
 ```bash
 # Using the full SDK (recommended)
-npm install @swapkit/sdk
+npm install @uswap/sdk
 
 # Or individual packages for smaller bundles
-npm install @swapkit/toolboxes @swapkit/plugins
+npm install @uswap/toolboxes @uswap/plugins
 ```
 
 ### Basic Setup
@@ -35,18 +36,18 @@ npm install @swapkit/toolboxes @swapkit/plugins
 <TabItem label="With SDK">
 ```typescript
 // @noErrorValidation
-import { createSwapKit } from '@swapkit/sdk';
+import { createUSwap } from '@uswap/sdk';
 
-const swapKit = createSwapKit();
+const uSwap = createUSwap();
 
-const nearWallet = await swapKit.getWallet(Chain.Near);
+const nearWallet = await uSwap.getWallet(Chain.Near);
 
 ````
 </TabItem>
 <TabItem label="Standalone Toolbox">
 ```typescript
 // @noErrorValidation
-import { getNearToolbox } from '@swapkit/toolboxes/near';
+import { getNearToolbox } from '@uswap/toolboxes/near';
 
 
 const nearToolbox = await getNearToolbox({
@@ -92,7 +93,7 @@ console.log(publicKey);
 
 ```typescript
 // @noErrorValidation
-import { AssetValue } from "@swapkit/sdk";
+import { AssetValue } from "@uswap/sdk";
 
 const txHash = await toolbox.transfer({
   recipient: "receiver.near",
@@ -214,7 +215,7 @@ const transferFee = await toolbox.estimateTransactionFee({
   assetValue: AssetValue.from({ chain: Chain.Near, value: "1" }),
 });
 
-import { estimateGas } from "@swapkit/toolboxes/near";
+import { estimateGas } from "@uswap/toolboxes/near";
 
 const gasEstimate = await estimateGas(
   {
@@ -239,7 +240,7 @@ console.log(`Estimated gas: ${gasEstimate} TGas`);
 
 ## NEAR Plugin
 
-The NEAR plugin extends SwapKit with NEAR-specific features:
+The NEAR plugin extends USwap with NEAR-specific features:
 
 ### NEAR Names Service
 
@@ -247,14 +248,14 @@ NEAR Names is a decentralized naming service similar to ENS on Ethereum:
 
 ```typescript
 // @noErrorValidation
-import { SwapKit } from "@swapkit/sdk";
+import { USwap } from "@uswap/sdk";
 
-const swapKit = SwapKit.create();
+const uSwap = USwap.create();
 
-const isAvailable = await swapKit.nearNames.isAvailable("myname");
+const isAvailable = await uSwap.nearNames.isAvailable("myname");
 
 if (isAvailable) {
-  const txHash = await swapKit.nearNames.register({
+  const txHash = await uSwap.nearNames.register({
     name: "myname",
 
     publicKey: "ed25519:...",
@@ -262,18 +263,18 @@ if (isAvailable) {
   console.log(`Registered myname.near: ${txHash}`);
 }
 
-const owner = await swapKit.nearNames.resolve("alice");
+const owner = await uSwap.nearNames.resolve("alice");
 console.log(`alice.near is owned by: ${owner}`);
 
-const info = await swapKit.nearNames.getInfo("alice");
+const info = await uSwap.nearNames.getInfo("alice");
 console.log(info);
 
-const names = await swapKit.nearNames.lookupNames(
+const names = await uSwap.nearNames.lookupNames(
   "8fac9c5b1f4e8b4c9a7d2e6f1a3b5c7d9e2f4a6b8c1d3e5f7a9b1c3d5e7f9a1b"
 );
 console.log(`Names owned: ${names}`);
 
-const transferTx = await swapKit.nearNames.transfer("myname", "new-owner.near");
+const transferTx = await uSwap.nearNames.transfer("myname", "new-owner.near");
 ```
 
 ### Cross-Chain Swaps via NEAR
@@ -283,7 +284,7 @@ The NEAR plugin supports cross-chain swaps using NEAR as an intermediary:
 ```typescript
 // @noErrorValidation
 
-const quote = await swapKit.getQuote({
+const quote = await uSwap.getQuote({
   sellAsset: "ETH.ETH",
   sellAmount: "0.1",
   buyAsset: "NEAR.NEAR",
@@ -291,7 +292,7 @@ const quote = await swapKit.getQuote({
   recipientAddress: "receiver.near",
 });
 
-const swapTx = await swapKit.swap({
+const swapTx = await uSwap.swap({
   route: quote.routes[0],
   recipient: "receiver.near",
 });
@@ -316,14 +317,14 @@ NEAR operations can throw specific errors that should be handled:
 
 ```typescript
 // @noErrorValidation
-import { SwapKitError } from "@swapkit/sdk";
+import { USwapError } from "@uswap/sdk";
 
 try {
   await toolbox.transfer({
     /* ... */
   });
 } catch (error) {
-  if (error instanceof SwapKitError) {
+  if (error instanceof USwapError) {
     switch (error.code) {
       case "toolbox_near_no_signer":
         console.error("No signer available");
@@ -382,11 +383,11 @@ To use NEAR testnet:
 
 ```typescript
 // @noErrorValidation
-import { SKConfig } from '@swapkit/sdk';
+import { USwapConfig } from '@uswap/sdk';
 
 
-SKConfig.setEnv('isStagenet', true);
-SKConfig.setRpcUrl(Chain.Near, 'https:
+USwapConfig.setEnv('isStagenet', true);
+USwapConfig.setRpcUrl(Chain.Near, 'https:
 
 
 const toolbox = await getNearToolbox({ phrase: "..." });
@@ -398,7 +399,7 @@ The toolbox provides utility functions for gas calculations:
 
 ```typescript
 // @noErrorValidation
-import { tgasToGas, gasToTGas } from "@swapkit/toolboxes/near";
+import { tgasToGas, gasToTGas } from "@uswap/toolboxes/near";
 
 const gasUnits = tgasToGas("30");
 
@@ -410,7 +411,7 @@ const tgas = gasToTGas("30000000000000");
 1. **Always validate addresses** before sending transactions:
 
    ```typescript
-   import { validateNearAddress } from "@swapkit/toolboxes/near";
+   import { validateNearAddress } from "@uswap/toolboxes/near";
 
    if (!validateNearAddress(recipient)) {
      throw new Error("Invalid NEAR address");

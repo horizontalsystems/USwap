@@ -1,36 +1,40 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   loadPlugin,
   loadWallet,
   type PluginName,
-  type SKConfigState,
-  type SKPlugins,
-  SwapKit,
-  SwapKitError,
+  USwap,
+  type USwapConfigState,
+  USwapError,
+  type USwapPlugins,
   type WalletOption,
-} from "@swapkit/sdk";
+} from "@uswap/sdk";
 
-export async function getSkClient<W extends WalletOption, P extends PluginName[]>({
+export async function getUSClient<W extends WalletOption, P extends PluginName[]>({
   walletOption,
   pluginNames,
 }: {
   walletOption: W;
   pluginNames: P;
-}): Promise<{ client: ReturnType<typeof SwapKit>; connectMethod: string }> {
+}): Promise<{ client: ReturnType<typeof USwap>; connectMethod: string }> {
   const connectedPlugins = await loadPlugins(pluginNames);
   const walletPkg = await loadWallet(walletOption);
   const connectMethod = Object.keys(walletPkg).find((key) => key.startsWith("connect"));
   if (!connectMethod) {
-    throw new SwapKitError("core_wallet_connection_not_found", { walletOption });
+    throw new USwapError("core_wallet_connection_not_found", { walletOption });
   }
 
   return {
-    client: SwapKit({ plugins: connectedPlugins, wallets: { ...walletPkg } }) as ReturnType<typeof SwapKit>,
+    client: USwap({ plugins: connectedPlugins, wallets: { ...walletPkg } }) as ReturnType<typeof USwap>,
     connectMethod,
   };
 }
 
-export async function loadPlugins<P extends PluginName[]>(pluginNames: P): Promise<Pick<SKPlugins, P[number]>> {
-  let connectedPlugins = {} as Pick<SKPlugins, P[number]>;
+export async function loadPlugins<P extends PluginName[]>(pluginNames: P): Promise<Pick<USwapPlugins, P[number]>> {
+  let connectedPlugins = {} as Pick<USwapPlugins, P[number]>;
 
   if (pluginNames?.length) {
     for (const pluginName of pluginNames) {
@@ -42,7 +46,7 @@ export async function loadPlugins<P extends PluginName[]>(pluginNames: P): Promi
   return connectedPlugins;
 }
 
-export const getStableConfigMemoKey = (config: SKConfigState | undefined) => {
+export const getStableConfigMemoKey = (config: USwapConfigState | undefined) => {
   if (!config) return null;
 
   try {

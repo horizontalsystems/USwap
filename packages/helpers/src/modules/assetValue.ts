@@ -1,5 +1,9 @@
-import type { TokenListName, TokenNames, TokenTax } from "@swapkit/tokens";
-import { AllChains, Chain, type ChainId, type EVMChain, EVMChains, getChainConfig } from "@swapkit/types";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import type { TokenListName, TokenNames, TokenTax } from "@uswap/tokens";
+import { AllChains, Chain, type ChainId, type EVMChain, EVMChains, getChainConfig } from "@uswap/types";
 import { getAddress } from "ethers";
 import { match } from "ts-pattern";
 import {
@@ -15,8 +19,8 @@ import { validateIdentifier } from "../utils/validators";
 
 import type { NumberPrimitives } from "./bigIntArithmetics";
 import { BigIntArithmetics, formatBigIntToSafeValue } from "./bigIntArithmetics";
-import { SwapKitError } from "./swapKitError";
-import type { SwapKitValueType } from "./swapKitNumber";
+import { USwapError } from "./uSwapError";
+import type { SwapKitValueType } from "./uSwapNumber";
 
 const CASE_SENSITIVE_CHAINS: Chain[] = [Chain.Solana, Chain.Tron, Chain.Near, Chain.Sui];
 const TC_CHAINS: Chain[] = [Chain.THORChain, Chain.Maya];
@@ -141,7 +145,7 @@ export class AssetValue extends BigIntArithmetics {
     const firstDotIndex = urlAsset.indexOf(".");
 
     if (firstDotIndex === -1) {
-      throw new SwapKitError({ errorKey: "helpers_invalid_asset_url", info: { urlAsset } });
+      throw new USwapError({ errorKey: "helpers_invalid_asset_url", info: { urlAsset } });
     }
 
     const chain = urlAsset.slice(0, firstDotIndex);
@@ -212,7 +216,7 @@ export class AssetValue extends BigIntArithmetics {
       id: `assetValue_static_decimal_not_found_${chain}`,
       warning: `Couldn't find static decimal for one or more tokens on ${chain} (Using default ${baseDecimal} decimal as fallback).
 This can result in incorrect calculations and mess with amount sent on transactions.
-You can load static assets by installing @swapkit/tokens package and calling AssetValue.loadStaticAssets()
+You can load static assets by installing @uswap/tokens package and calling AssetValue.loadStaticAssets()
 or by passing asyncTokenLookup: true to the from() function, which will make it async and return a promise.`,
     });
 
@@ -234,7 +238,7 @@ or by passing asyncTokenLookup: true to the from() function, which will make it 
   }
 
   static async loadStaticAssets(listNames?: TokenListName[]) {
-    const { loadTokenLists } = await import("@swapkit/tokens");
+    const { loadTokenLists } = await import("@uswap/tokens");
     const lists = await loadTokenLists(listNames);
 
     for (const { tokens } of Object.values(lists)) {
@@ -375,7 +379,7 @@ function createSyntheticAssetValue(identifier: string, value: NumberPrimitives =
     : identifier.split(assetSeparator);
 
   if (!(synthChain && symbol)) {
-    throw new SwapKitError({ errorKey: "helpers_invalid_asset_identifier", info: { identifier } });
+    throw new USwapError({ errorKey: "helpers_invalid_asset_identifier", info: { identifier } });
   }
 
   return new AssetValue({
@@ -416,9 +420,9 @@ function validateAssetChain(assetOrChain: AssetIdentifier) {
       return assetInfo.synth ? Chain.THORChain : assetInfo.chain;
     });
 
-  // TODO: move to SKConfig chains once we support it throughout sdk
+  // TODO: move to USwapConfig chains once we support it throughout sdk
   if (!AllChains.includes(chain.toUpperCase() as Chain)) {
-    throw new SwapKitError({
+    throw new USwapError({
       errorKey: "helpers_invalid_asset_identifier",
       info: { message: "Please use the AssetValue constructor for unsupported chains" },
     });
@@ -461,7 +465,7 @@ function getSyntheticOrTradeAssetInfo(identifier: string, isSynthetic: boolean, 
     : identifier.split(assetSeparator);
 
   if (!(synthChain && synthSymbol)) {
-    throw new SwapKitError({ errorKey: "helpers_invalid_asset_identifier", info: { identifier } });
+    throw new USwapError({ errorKey: "helpers_invalid_asset_identifier", info: { identifier } });
   }
 
   // Get the ticker from the base symbol (e.g., "AVAX" from "AVAX/AVAX")

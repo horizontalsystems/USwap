@@ -1,9 +1,13 @@
-import type { Chain } from "@swapkit/types";
-import { SKConfig } from "../modules/swapKitConfig";
-import { SwapKitError } from "../modules/swapKitError";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import type { Chain } from "@uswap/types";
+import { USwapConfig } from "../modules/uSwapConfig";
+import { USwapError } from "../modules/uSwapError";
 
 // Backward compatibility
-const supportedChains = ["TERRA", ...SKConfig.get("chains")];
+const supportedChains = ["TERRA", ...USwapConfig.get("chains")];
 
 export function validateIdentifier(identifier = "") {
   const uppercasedIdentifier = identifier.toUpperCase();
@@ -14,7 +18,7 @@ export function validateIdentifier(identifier = "") {
   const [synthChain] = uppercasedIdentifier.split("/") as [Chain, string];
   if (supportedChains.includes(synthChain)) return true;
 
-  throw new SwapKitError({
+  throw new USwapError({
     errorKey: "helpers_invalid_identifier",
     info: {
       identifier,

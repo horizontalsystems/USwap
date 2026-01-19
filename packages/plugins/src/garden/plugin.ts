@@ -1,14 +1,10 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { VersionedTransaction } from "@solana/web3.js";
-import {
-  ApproveMode,
-  AssetValue,
-  Chain,
-  EVMChains,
-  ProviderName,
-  SwapKitError,
-  type SwapParams,
-} from "@swapkit/helpers";
-import type { EVMTransaction, QuoteResponseRoute } from "@swapkit/helpers/api";
+import { ApproveMode, AssetValue, Chain, EVMChains, ProviderName, type SwapParams, USwapError } from "@uswap/helpers";
+import type { EVMTransaction, QuoteResponseRoute } from "@uswap/helpers/api";
 import { match } from "ts-pattern";
 import { approve, createPlugin } from "../utils";
 
@@ -39,7 +35,7 @@ export const GardenPlugin = createPlugin({
         })
         .otherwise(async (chain) => {
           if (!targetAddress) {
-            throw new SwapKitError("plugin_garden_missing_data", { message: "Missing target address: " });
+            throw new USwapError("plugin_garden_missing_data", { message: "Missing target address: " });
           }
           const wallet = getWallet(chain as Exclude<Chain, Chain.Radix>);
 
@@ -50,5 +46,5 @@ export const GardenPlugin = createPlugin({
     },
   }),
   name: "garden",
-  properties: { supportedSwapkitProviders: [ProviderName.GARDEN] as const },
+  properties: { supportedUSwapProviders: [ProviderName.GARDEN] as const },
 });

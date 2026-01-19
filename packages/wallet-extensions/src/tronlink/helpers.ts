@@ -1,5 +1,9 @@
-import { Chain, SwapKitError, WalletOption } from "@swapkit/helpers";
-import { createTronToolbox, type TronTransaction } from "@swapkit/toolboxes/tron";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { Chain, USwapError, WalletOption } from "@uswap/helpers";
+import { createTronToolbox, type TronTransaction } from "@uswap/toolboxes/tron";
 import type { TronLinkWindow } from "./types.js";
 import { TronLinkResponseCode } from "./types.js";
 
@@ -16,7 +20,7 @@ export function waitForTronLink(timeout = 3000): Promise<TronLinkWindow> {
       if (window.tronLink) {
         resolve(window.tronLink);
       } else {
-        reject(new SwapKitError("wallet_provider_not_found", { wallet: WalletOption.TRONLINK }));
+        reject(new USwapError("wallet_provider_not_found", { wallet: WalletOption.TRONLINK }));
       }
     };
 
@@ -53,11 +57,11 @@ async function requestTronLinkAccounts(tronLink: TronLinkWindow) {
   const response = await tronLink.request({ method: "tron_requestAccounts" });
 
   if (response === "") {
-    throw new SwapKitError("wallet_tronlink_locked", { message: "TronLink is locked. Please unlock it to continue." });
+    throw new USwapError("wallet_tronlink_locked", { message: "TronLink is locked. Please unlock it to continue." });
   }
 
   if (response.code !== TronLinkResponseCode.SUCCESS) {
-    throw new SwapKitError("wallet_tronlink_request_accounts_failed", {
+    throw new USwapError("wallet_tronlink_request_accounts_failed", {
       code: response.code,
       message: `TronLink requestAccounts failed: ${response.message}`,
     });
@@ -66,7 +70,7 @@ async function requestTronLinkAccounts(tronLink: TronLinkWindow) {
 
 export async function getWalletForChain(chain: Chain, expectedNetwork?: string) {
   if (chain !== Chain.Tron) {
-    throw new SwapKitError("wallet_chain_not_supported", { chain, wallet: WalletOption.TRONLINK });
+    throw new USwapError("wallet_chain_not_supported", { chain, wallet: WalletOption.TRONLINK });
   }
 
   const tronLink = await waitForTronLink();
@@ -130,12 +134,12 @@ export function setupEventListeners(
 export function verifyNetwork(expectedNetwork: string) {
   const tronLink = window.tronLink;
   if (!tronLink) {
-    throw new SwapKitError("wallet_provider_not_found", { wallet: WalletOption.TRONLINK });
+    throw new USwapError("wallet_provider_not_found", { wallet: WalletOption.TRONLINK });
   }
 
   const currentNode = tronLink.tronWeb.fullNode?.host;
   if (currentNode && !currentNode.includes(expectedNetwork)) {
-    throw new SwapKitError("wallet_failed_to_add_or_switch_network", {
+    throw new USwapError("wallet_failed_to_add_or_switch_network", {
       currentNetwork: currentNode,
       expectedNetwork,
       message: `Wrong network. Please switch to ${expectedNetwork} in TronLink.`,

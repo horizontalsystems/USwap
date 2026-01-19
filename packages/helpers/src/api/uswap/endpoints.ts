@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   type Chain,
   type EVMChain,
@@ -5,9 +9,10 @@ import {
   isGasAsset,
   type ProviderName,
   RequestClient,
-  SKConfig,
-  SwapKitError,
-} from "@swapkit/helpers";
+  type RequestOptions,
+  USwapConfig,
+  USwapError,
+} from "@uswap/helpers";
 import { match, P } from "ts-pattern";
 import {
   type BalanceResponse,
@@ -34,72 +39,72 @@ import {
   type TrackingRequest,
 } from "./types";
 
-const SKRequestClient = RequestClient.extend({
+const USwapRequestClient = RequestClient.extend({
   dynamicHeader: () => {
-    const { swapKit } = SKConfig.get("apiKeys");
-    return swapKit ? { "x-api-key": swapKit } : {};
+    const { uSwap } = USwapConfig.get("apiKeys");
+    return uSwap ? { "x-api-key": uSwap } : {};
   },
 });
 
-export async function getTrackerDetails(json: TrackingRequest) {
-  const response = await SKRequestClient.post<TrackerResponse>(getApiUrl("/track"), { json });
+export async function getTrackerDetails(json: TrackingRequest, options?: RequestOptions) {
+  const response = await USwapRequestClient.post<TrackerResponse>(getApiUrl("/track"), { json, ...options });
 
   try {
     const parsedResponse = TrackerResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch (_error) {
-    // throw new SwapKitError("api_v2_invalid_response", error);
+    // throw new USwapError("api_v2_invalid_response", error);
     return response;
   }
 }
 
-export async function getSwapQuote(json: QuoteRequest) {
-  const { getQuote } = SKConfig.get("endpoints");
+export async function getSwapQuote(json: QuoteRequest, options?: RequestOptions) {
+  const { getQuote } = USwapConfig.get("endpoints");
 
   if (getQuote) return getQuote(json);
 
-  const response = await SKRequestClient.post<QuoteResponse>(getApiUrl("/quote"), { json });
+  const response = await USwapRequestClient.post<QuoteResponse>(getApiUrl("/quote"), { json, ...options });
 
   if (response.error) {
-    throw new SwapKitError("api_v2_server_error", { message: response.error });
+    throw new USwapError("api_v2_server_error", { message: response.error });
   }
 
   try {
     const parsedResponse = QuoteResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch {
-    // throw new SwapKitError("api_v2_invalid_response", error);
+    // throw new USwapError("api_v2_invalid_response", error);
     return response;
   }
 }
 
 export async function getRouteWithTx(json: { routeId: string; sourceAddress: string; destinationAddress: string }) {
-  const { getRouteWithTx } = SKConfig.get("endpoints");
+  const { getRouteWithTx } = USwapConfig.get("endpoints");
 
   if (getRouteWithTx) return getRouteWithTx(json);
 
-  const response = await SKRequestClient.post<QuoteResponseRoute>(getApiUrl("/swap"), { json });
+  const response = await USwapRequestClient.post<QuoteResponseRoute>(getApiUrl("/swap"), { json });
 
   try {
     const parsedResponse = QuoteResponseRouteItem.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch (error) {
-    console.error(new SwapKitError("api_v2_invalid_response", error));
+    console.error(new USwapError("api_v2_invalid_response", error));
     return response;
   }
 }
@@ -113,57 +118,57 @@ export async function getChainBalance<T extends Chain>({
   address: string;
   scamFilter?: boolean;
 }) {
-  const { getBalance } = SKConfig.get("endpoints");
+  const { getBalance } = USwapConfig.get("endpoints");
   if (getBalance) return getBalance({ address, chain });
 
   const url = getApiUrl(`/balance?chain=${chain}&address=${address}`);
-  const balanceResponse = await SKRequestClient.get<BalanceResponse>(url);
+  const balanceResponse = await USwapRequestClient.get<BalanceResponse>(url);
   const balances = Array.isArray(balanceResponse) ? balanceResponse : [];
   return scamFilter ? filterAssets(balances) : balances;
 }
 
 export function getTokenListProviders() {
   const url = getApiUrl("/providers");
-  return SKRequestClient.get<TokenListProvidersResponse>(url);
+  return USwapRequestClient.get<TokenListProvidersResponse>(url);
 }
 
 export function getTokenList(provider: ProviderName) {
   const url = getApiUrl(`/tokens?provider=${provider}`);
-  return SKRequestClient.get<TokensResponseV2>(url);
+  return USwapRequestClient.get<TokensResponseV2>(url);
 }
 
 export async function getPrice(body: PriceRequest) {
   const url = getApiUrl("/price");
-  const response = await SKRequestClient.post<PriceResponse>(url, { json: body });
+  const response = await USwapRequestClient.post<PriceResponse>(url, { json: body });
 
   try {
     const parsedResponse = PriceResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch (error) {
-    throw new SwapKitError("api_v2_invalid_response", error);
+    throw new USwapError("api_v2_invalid_response", error);
   }
 }
 
 export async function getGasRate() {
   const url = getApiUrl("/gas");
-  const response = await SKRequestClient.get<GasResponse>(url);
+  const response = await USwapRequestClient.get<GasResponse>(url);
 
   try {
     const parsedResponse = GasResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     const gasRates = Array.isArray(parsedResponse) ? parsedResponse : [parsedResponse];
     return gasRates;
   } catch (error) {
-    throw new SwapKitError("api_v2_invalid_response", error);
+    throw new USwapError("api_v2_invalid_response", error);
   }
 }
 
@@ -171,22 +176,22 @@ export async function getChainflipDepositChannel(body: BrokerDepositChannelParam
   const { destinationAddress } = body;
 
   if (!destinationAddress) {
-    throw new SwapKitError("chainflip_broker_invalid_params");
+    throw new USwapError("chainflip_broker_invalid_params");
   }
-  const url = SKConfig.get("integrations").chainflip?.brokerUrl || getApiUrl("/chainflip/broker/channel");
+  const url = USwapConfig.get("integrations").chainflip?.brokerUrl || getApiUrl("/chainflip/broker/channel");
 
-  const response = await SKRequestClient.post<DepositChannelResponse>(url, { json: body });
+  const response = await USwapRequestClient.post<DepositChannelResponse>(url, { json: body });
 
   try {
     const parsedResponse = DepositChannelResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch (error) {
-    throw new SwapKitError("api_v2_invalid_response", error);
+    throw new USwapError("api_v2_invalid_response", error);
   }
 }
 
@@ -194,27 +199,27 @@ export async function getNearDepositChannel(body: NearDepositChannelParams) {
   const { destinationAddress } = body;
 
   if (!destinationAddress) {
-    throw new SwapKitError("chainflip_broker_invalid_params");
+    throw new USwapError("chainflip_broker_invalid_params");
   }
   const url = getApiUrl("/near/channel");
 
-  const response = await SKRequestClient.post<NearSwapResponse>(url, { json: body });
+  const response = await USwapRequestClient.post<NearSwapResponse>(url, { json: body });
 
   try {
     const parsedResponse = NearSwapResponseSchema.safeParse(response);
 
     if (!parsedResponse.success) {
-      throw new SwapKitError("api_v2_invalid_response", parsedResponse.error);
+      throw new USwapError("api_v2_invalid_response", parsedResponse.error);
     }
 
     return parsedResponse.data;
   } catch (error) {
-    throw new SwapKitError("api_v2_invalid_response", error);
+    throw new USwapError("api_v2_invalid_response", error);
   }
 }
 
 function getApiUrl(path?: `/${string}`) {
-  const { isDev, apiUrl, devApiUrl, experimental_apiUrlQuote, experimental_apiUrlSwap } = SKConfig.get("envs");
+  const { isDev, apiUrl, devApiUrl, experimental_apiUrlQuote, experimental_apiUrlSwap } = USwapConfig.get("envs");
 
   const defaultUrl = `${isDev ? devApiUrl : apiUrl}${path}`;
 

@@ -1,5 +1,9 @@
-import { AssetValue, Chain, ProviderName, SwapKitError, type SwapParams } from "@swapkit/helpers";
-import type { QuoteResponseRoute } from "@swapkit/helpers/api";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, Chain, ProviderName, type SwapParams, USwapError } from "@uswap/helpers";
+import type { QuoteResponseRoute } from "@uswap/helpers/api";
 import { createPlugin } from "../utils";
 
 export const RadixPlugin = createPlugin({
@@ -8,17 +12,17 @@ export const RadixPlugin = createPlugin({
       const assetValue = await AssetValue.from({ asset: sellAsset, asyncTokenLookup: true, value: sellAmount });
 
       if (Chain.Radix !== assetValue.chain) {
-        throw new SwapKitError("core_swap_invalid_params");
+        throw new USwapError("core_swap_invalid_params");
       }
 
       const wallet = getWallet(assetValue.chain);
       try {
         return wallet.signAndBroadcast({ manifest: tx as string });
       } catch (error) {
-        throw new SwapKitError("core_swap_invalid_params", error);
+        throw new USwapError("core_swap_invalid_params", error);
       }
     },
   }),
   name: "radix",
-  properties: { supportedSwapkitProviders: [ProviderName.CAVIAR_V1] as const },
+  properties: { supportedUSwapProviders: [ProviderName.CAVIAR_V1] as const },
 });

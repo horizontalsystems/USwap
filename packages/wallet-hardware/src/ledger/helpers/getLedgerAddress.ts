@@ -1,4 +1,8 @@
-import { Chain, SwapKitError, WalletOption } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { Chain, USwapError, WalletOption } from "@uswap/helpers";
 
 import type { getNearLedgerClient } from "../clients/near";
 import type { TronLedger } from "../clients/tron";
@@ -64,6 +68,6 @@ export const getLedgerAddress = async <
     }
 
     default:
-      throw new SwapKitError("wallet_chain_not_supported", { chain, wallet: WalletOption.LEDGER });
+      throw new USwapError("wallet_chain_not_supported", { chain, wallet: WalletOption.LEDGER });
   }
 };

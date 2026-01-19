@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { KeepKeySdk } from "@keepkey/keepkey-sdk";
 import {
   type AssetValue,
@@ -8,9 +12,9 @@ import {
   type GenericTransferParams,
   getRPCUrl,
   MAYAConfig,
-  SwapKitError,
-} from "@swapkit/helpers";
-import type { ThorchainDepositParams } from "@swapkit/toolboxes/cosmos";
+  USwapError,
+} from "@uswap/helpers";
+import type { ThorchainDepositParams } from "@uswap/toolboxes/cosmos";
 
 import { bip32ToAddressNList } from "../coins";
 
@@ -23,7 +27,7 @@ export async function mayachainWalletMethods({
   sdk: KeepKeySdk;
   derivationPath?: DerivationPathArray;
 }): Promise<any> {
-  const { createStargateClient, getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+  const { createStargateClient, getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
 
   const toolbox = await getCosmosToolbox(Chain.Maya);
   const derivationPathString = derivationPath ? derivationPathToString(derivationPath) : `${DerivationPath.MAYA}/0`;
@@ -35,10 +39,10 @@ export async function mayachainWalletMethods({
   const signTransaction = async ({ assetValue, recipient, sender, memo }: SignTransactionParams) => {
     const importedAmino = await import("@cosmjs/amino");
     const makeSignDoc = importedAmino.makeSignDoc ?? importedAmino.default?.makeSignDoc;
-    const { getDenomWithChain } = await import("@swapkit/toolboxes/cosmos");
+    const { getDenomWithChain } = await import("@uswap/toolboxes/cosmos");
 
     const account = await toolbox.getAccount(sender);
-    if (!account) throw new SwapKitError("wallet_keepkey_account_not_found");
+    if (!account) throw new USwapError("wallet_keepkey_account_not_found");
     const { accountNumber, sequence = 0 } = account;
     const amount = assetValue.getBaseValue("string");
 

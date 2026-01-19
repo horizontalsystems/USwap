@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   ApproveMode,
   type ApproveReturnType,
@@ -19,17 +23,12 @@ import {
   getMinAmountByChain,
   MemoType,
   ProviderName,
-  SwapKitError,
   type SwapParams,
   type TCLikeChain,
+  USwapError,
   wrapWithThrow,
-} from "@swapkit/helpers";
-import {
-  type InboundAddressesItem,
-  type QuoteResponseRoute,
-  SwapKitApi,
-  type THORNodeType,
-} from "@swapkit/helpers/api";
+} from "@uswap/helpers";
+import { type InboundAddressesItem, type QuoteResponseRoute, type THORNodeType, USwapApi } from "@uswap/helpers/api";
 import {
   MayaArbitrumVaultAbi,
   MayaEthereumVaultAbi,
@@ -37,7 +36,7 @@ import {
   TCBaseDepositABI,
   TCBscDepositABI,
   TCEthereumVaultAbi,
-} from "@swapkit/helpers/contracts";
+} from "@uswap/helpers/contracts";
 import type { SwapKitPluginParams } from "../types";
 import { createPlugin } from "../utils";
 import { prepareTxParams, validateAddressType } from "./shared";
@@ -69,13 +68,13 @@ const MayaSpecificAbi = { [Chain.Arbitrum]: MayaArbitrumVaultAbi, [Chain.Ethereu
 export const ThorchainPlugin = createPlugin({
   methods: createTCBasedPlugin(Chain.THORChain),
   name: "thorchain",
-  properties: { supportedSwapkitProviders: [ProviderName.THORCHAIN, ProviderName.THORCHAIN_STREAMING] as const },
+  properties: { supportedUSwapProviders: [ProviderName.THORCHAIN, ProviderName.THORCHAIN_STREAMING] as const },
 });
 
 export const MayachainPlugin = createPlugin({
   methods: createTCBasedPlugin(Chain.Maya),
   name: "mayachain",
-  properties: { supportedSwapkitProviders: [ProviderName.MAYACHAIN, ProviderName.MAYACHAIN_STREAMING] as const },
+  properties: { supportedUSwapProviders: [ProviderName.MAYACHAIN, ProviderName.MAYACHAIN_STREAMING] as const },
 });
 
 function getInboundDataFunction(type?: THORNodeType) {
@@ -91,11 +90,11 @@ function getInboundDataFunction(type?: THORNodeType) {
       } as InboundAddressesItem;
     }
 
-    const inboundData = await SwapKitApi.thornode.getInboundAddresses(type);
+    const inboundData = await USwapApi.thornode.getInboundAddresses(type);
     const chainAddressData = inboundData.find((item) => item.chain === chain);
 
-    if (!chainAddressData) throw new SwapKitError("core_inbound_data_not_found");
-    if (chainAddressData?.halted) throw new SwapKitError("core_chain_halted");
+    if (!chainAddressData) throw new USwapError("core_inbound_data_not_found");
+    if (chainAddressData?.halted) throw new USwapError("core_chain_halted");
 
     return chainAddressData;
   };
@@ -127,13 +126,13 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
       const wallet = getWallet(chain);
 
       if (!wallet) {
-        throw new SwapKitError("core_wallet_connection_not_found");
+        throw new USwapError("core_wallet_connection_not_found");
       }
 
       const walletAction = type === "checkOnly" ? wallet.isApproved : wallet.approve;
 
       if (!(assetValue.address && wallet.address)) {
-        throw new SwapKitError("core_approve_asset_address_or_from_not_found");
+        throw new USwapError("core_approve_asset_address_or_from_not_found");
       }
 
       return walletAction({
@@ -151,12 +150,12 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
 
       const wallet = getWallet(chain);
       if (!wallet) {
-        throw new SwapKitError("core_wallet_connection_not_found");
+        throw new USwapError("core_wallet_connection_not_found");
       }
       const { address } = wallet;
       const isAddressValidated = validateAddressType({ address, chain });
       if (!isAddressValidated) {
-        throw new SwapKitError("core_transaction_invalid_sender_address");
+        throw new USwapError("core_transaction_invalid_sender_address");
       }
 
       const params = prepareTxParams({ assetValue, from: address, recipient, router, ...rest });
@@ -171,7 +170,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
           return shouldDeposit ? wallet.deposit(params) : wallet.transfer(params);
         }
 
-        const { getChecksumAddressFromAsset } = await import("@swapkit/toolboxes/evm");
+        const { getChecksumAddressFromAsset } = await import("@uswap/toolboxes/evm");
         const wallet = getWallet(chain as EVMChain);
 
         return wallet.call<string>({
@@ -208,16 +207,16 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
                 ? "core_transaction_user_rejected"
                 : "core_transaction_deposit_error";
 
-        throw new SwapKitError(errorKey, error);
+        throw new USwapError(errorKey, error);
       }
     }
 
     async function depositToProtocol({ memo, assetValue }: { assetValue: AssetValue; memo: string }) {
-      const mimir = await SwapKitApi.thornode.getMimirInfo(pluginType);
+      const mimir = await USwapApi.thornode.getMimirInfo(pluginType);
 
       // check if trading is halted or not
       if (mimir.HALTCHAINGLOBAL >= 1 || mimir.HALTTHORCHAIN >= 1) {
-        throw new SwapKitError("thorchain_chain_halted");
+        throw new USwapError("thorchain_chain_halted");
       }
 
       return deposit({ assetValue, memo, recipient: "" });
@@ -269,7 +268,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
       const payout = payoutAddress || getWallet(assetValue.chain)?.address;
 
       if (!payout) {
-        throw new SwapKitError("thorchain_preferred_asset_payout_required");
+        throw new USwapError("thorchain_preferred_asset_payout_required");
       }
 
       return depositToProtocol({
@@ -296,7 +295,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
 
     async function createLiquidity({ baseAssetValue, assetValue }: CreateLiquidityParams) {
       if (baseAssetValue.lte(0) || assetValue.lte(0)) {
-        throw new SwapKitError("core_transaction_create_liquidity_invalid_params");
+        throw new USwapError("core_transaction_create_liquidity_invalid_params");
       }
 
       const assetAddress = getWallet(assetValue.chain).address;
@@ -318,7 +317,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
 
     function addLiquidityPart({ assetValue, poolAddress, address, symmetric }: AddLiquidityPartParams) {
       if (symmetric && !address) {
-        throw new SwapKitError("core_transaction_add_liquidity_invalid_params");
+        throw new USwapError("core_transaction_add_liquidity_invalid_params");
       }
       const memo = getMemoForDeposit({
         address: symmetric ? address : "",
@@ -349,10 +348,10 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
       const assetAddress = isSym || mode === "asset" ? assetAddr || getWallet(chain).address : "";
 
       if (!(baseTransfer || assetTransfer)) {
-        throw new SwapKitError("core_transaction_add_liquidity_invalid_params");
+        throw new USwapError("core_transaction_add_liquidity_invalid_params");
       }
       if (includeBaseAddress && !baseAddress) {
-        throw new SwapKitError("core_transaction_add_liquidity_base_address");
+        throw new USwapError("core_transaction_add_liquidity_base_address");
       }
 
       const baseAssetTx =
@@ -420,7 +419,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
     ) {
       if (params.type === "stake") {
         if (params.assetValue.toString() !== "THOR.TCY") {
-          throw new SwapKitError("thorchain_asset_is_not_tcy");
+          throw new USwapError("thorchain_asset_is_not_tcy");
         }
 
         return deposit({
@@ -447,7 +446,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
       });
 
       if (!assetValue) {
-        throw new SwapKitError("core_swap_asset_not_recognized");
+        throw new USwapError("core_swap_asset_not_recognized");
       }
 
       const isRecipientValidated = validateAddressType({
@@ -456,7 +455,7 @@ function createTCBasedPlugin<T extends TCLikeChain>(pluginChain: T) {
       });
 
       if (!isRecipientValidated) {
-        throw new SwapKitError("core_transaction_invalid_recipient_address");
+        throw new USwapError("core_transaction_invalid_recipient_address");
       }
 
       const { address: recipient } = await getInboundDataByChain(assetValue.chain);

@@ -1,5 +1,9 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { describe, expect, test } from "bun:test";
-import { Chain } from "@swapkit/types";
+import { Chain } from "@uswap/types";
 
 import { findAssetBy } from "../asset";
 import { getChainIdentifier, getMAYANameCost, getTHORNameCost, warnOnce, wrapWithThrow } from "../others";
@@ -66,7 +70,7 @@ describe("wrapWithThrow", () => {
     ).toBeUndefined();
   });
 
-  test("throws SwapKitError when errorKey provided", () => {
+  test("throws USwapError when errorKey provided", () => {
     expect(() =>
       wrapWithThrow(() => {
         throw new Error("test");

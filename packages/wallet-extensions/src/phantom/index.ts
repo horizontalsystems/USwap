@@ -1,12 +1,16 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   type AssetValue,
   Chain,
   filterSupportedChains,
   type GenericTransferParams,
-  SwapKitError,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 
 export const phantomWallet = createWallet({
   connect: ({ addChain, supportedChains, walletType }) =>
@@ -24,9 +28,9 @@ export const phantomWallet = createWallet({
 
         return true;
       } catch (error) {
-        if (error instanceof SwapKitError) throw error;
+        if (error instanceof USwapError) throw error;
 
-        throw new SwapKitError("wallet_connection_rejected_by_user", error);
+        throw new USwapError("wallet_connection_rejected_by_user", error);
       }
     },
   name: "connectPhantom",
@@ -44,10 +48,10 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
     case Chain.Bitcoin: {
       const provider = phantom?.bitcoin;
       if (!provider?.isPhantom) {
-        throw new SwapKitError("wallet_phantom_not_found");
+        throw new USwapError("wallet_phantom_not_found");
       }
 
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const [{ address }] = await provider.requestAccounts();
       const toolbox = await getUtxoToolbox(chain);
 
@@ -56,8 +60,8 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
 
     case Chain.Ethereum:
     case Chain.Monad: {
-      const { getEvmToolbox } = await import("@swapkit/toolboxes/evm");
-      const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@swapkit/helpers");
+      const { getEvmToolbox } = await import("@uswap/toolboxes/evm");
+      const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@uswap/helpers");
       const { BrowserProvider } = await import("ethers");
 
       const provider = new BrowserProvider(phantom?.ethereum, "any");
@@ -75,10 +79,10 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
     }
 
     case Chain.Solana: {
-      const { getSolanaToolbox } = await import("@swapkit/toolboxes/solana");
+      const { getSolanaToolbox } = await import("@uswap/toolboxes/solana");
       const provider = phantom?.solana;
       if (!provider?.isPhantom) {
-        throw new SwapKitError("wallet_phantom_not_found");
+        throw new USwapError("wallet_phantom_not_found");
       }
 
       const providerConnection = await provider.connect();
@@ -94,7 +98,7 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
         const validateAddress = await toolbox.getAddressValidator();
 
         if (!(isProgramDerivedAddress || validateAddress(recipient))) {
-          throw new SwapKitError("core_transaction_invalid_recipient_address");
+          throw new USwapError("core_transaction_invalid_recipient_address");
         }
 
         const fromPubkey = new PublicKey(address);
@@ -108,7 +112,7 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
         });
 
         if (!transaction) {
-          throw new SwapKitError("core_transaction_invalid_sender_address");
+          throw new USwapError("core_transaction_invalid_sender_address");
         }
 
         const blockHash = await connection.getLatestBlockhash();
@@ -126,7 +130,7 @@ async function getWalletMethods(chain: PhantomSupportedChain) {
     }
 
     default: {
-      throw new SwapKitError("wallet_chain_not_supported", { chain, wallet: WalletOption.PHANTOM });
+      throw new USwapError("wallet_chain_not_supported", { chain, wallet: WalletOption.PHANTOM });
     }
   }
 }

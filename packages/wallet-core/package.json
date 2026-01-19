@@ -1,7 +1,7 @@
 {
   "author": "swapkit-oss",
-  "dependencies": { "@swapkit/helpers": "workspace:*" },
-  "description": "SwapKit - Wallet Core",
+  "dependencies": { "@uswap/helpers": "workspace:*" },
+  "description": "USwap - Wallet Core",
   "exports": {
     ".": {
       "bun": "./src/index.ts",
@@ -11,13 +11,13 @@
     }
   },
   "files": ["dist/", "src/"],
-  "homepage": "https://github.com/swapkit/SwapKit",
+  "homepage": "https://github.com/horizontalsystems/USwap",
   "license": "Apache-2.0",
-  "name": "@swapkit/wallet-core",
+  "name": "@uswap/wallet-core",
   "repository": {
     "directory": "packages/wallet-core",
     "type": "git",
-    "url": "git+https://github.com/swapkit/SwapKit.git"
+    "url": "git+https://github.com/horizontalsystems/USwap.git"
   },
   "scripts": {
     "build": "bun run ./build.ts",
@@ -29,5 +29,5 @@
     "type-check:go": "tsgo"
   },
   "type": "module",
-  "version": "4.0.53"
+  "version": "4.0.58"
 }

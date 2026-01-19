@@ -1,9 +1,8 @@
-import {
-  type DerivationPathArray,
-  derivationPathToString,
-  NetworkDerivationPath,
-  SwapKitError,
-} from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { type DerivationPathArray, derivationPathToString, NetworkDerivationPath, USwapError } from "@uswap/helpers";
 import { CosmosLedgerInterface } from "../interfaces/CosmosLedgerInterface";
 
 export class CosmosLedger extends CosmosLedgerInterface {
@@ -39,7 +38,7 @@ export class CosmosLedger extends CosmosLedgerInterface {
 
     const { return_code, error_message, signature } = await this.ledgerApp.sign(this.derivationPath, rawTx);
 
-    if (!this.pubKey) throw new SwapKitError("wallet_ledger_pubkey_not_found");
+    if (!this.pubKey) throw new USwapError("wallet_ledger_pubkey_not_found");
 
     this.validateResponse(return_code, error_message);
 
@@ -53,7 +52,7 @@ export class CosmosLedger extends CosmosLedgerInterface {
     const accountIndex = accounts.findIndex((account) => account.address === signerAddress);
 
     if (accountIndex === -1) {
-      throw new SwapKitError("wallet_ledger_address_not_found", { address: signerAddress });
+      throw new USwapError("wallet_ledger_address_not_found", { address: signerAddress });
     }
 
     const importedAmino = await import("@cosmjs/amino");

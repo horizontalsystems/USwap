@@ -1,7 +1,11 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type BitcoinApp from "@ledgerhq/hw-app-btc";
 import type { CreateTransactionArg } from "@ledgerhq/hw-app-btc/lib-es/createTransaction";
-import { type DerivationPathArray, derivationPathToString, getWalletFormatFor, SwapKitError } from "@swapkit/helpers";
-import type { UTXOType } from "@swapkit/toolboxes/utxo";
+import { type DerivationPathArray, derivationPathToString, getWalletFormatFor, USwapError } from "@uswap/helpers";
+import type { UTXOType } from "@uswap/toolboxes/utxo";
 import type { Psbt } from "bitcoinjs-lib";
 
 import { getLedgerTransport } from "../helpers/getLedgerTransport";
@@ -59,7 +63,7 @@ const BaseLedgerUTXO = ({
 
   async function checkBtcAppAndCreateTransportWebUSB(checkBtcApp = true) {
     if (checkBtcApp && !btcApp) {
-      new SwapKitError("wallet_ledger_connection_error", {
+      new USwapError("wallet_ledger_connection_error", {
         message: `Ledger connection failed:\n${JSON.stringify({ btcApp, checkBtcApp })}`,
       });
     }
@@ -90,14 +94,14 @@ const BaseLedgerUTXO = ({
         btcApp = new BitcoinApp({ currency: chain, transport });
       },
       getAddress: async () => {
-        const { toCashAddress } = await import("@swapkit/toolboxes/utxo");
+        const { toCashAddress } = await import("@uswap/toolboxes/utxo");
 
         await checkBtcAppAndCreateTransportWebUSB(false);
 
         const { bitcoinAddress: address } = await btcApp.getWalletPublicKey(derivationPath, { format });
 
         if (!address) {
-          throw new SwapKitError("wallet_ledger_get_address_error", {
+          throw new USwapError("wallet_ledger_get_address_error", {
             message: `Cannot get ${chain} address from ledger derivation path: ${derivationPath}`,
           });
         }

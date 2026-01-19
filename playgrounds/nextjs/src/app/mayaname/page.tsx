@@ -1,7 +1,11 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 "use client";
 
-import { AssetValue, Chain, getMAYANameCost } from "@swapkit/helpers";
-import { useSwapKit } from "@swapkit/ui/react";
+import { AssetValue, Chain, getMAYANameCost } from "@uswap/helpers";
+import { useSwapKit } from "@uswap/ui/react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 
@@ -29,8 +33,8 @@ export default function Send() {
                 return;
               }
 
-              swapKit.mayachain.registerName({
-                address: swapKit.getAddress(Chain.Maya),
+              uSwap.mayachain.registerName({
+                address: uSwap.getAddress(Chain.Maya),
                 assetValue: AssetValue.from({ chain: Chain.Maya, value: getMAYANameCost(1) }),
                 chain: Chain.Maya,
                 name,

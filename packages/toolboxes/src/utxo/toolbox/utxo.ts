@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import secp256k1 from "@bitcoinerlab/secp256k1";
 // @ts-expect-error
 import { ECPair, HDNode } from "@psf/bitcoincashjs-lib";
@@ -13,11 +17,11 @@ import {
   derivationPathToString,
   FeeOption,
   NetworkDerivationPath,
-  SwapKitError,
-  SwapKitNumber,
+  USwapError,
+  USwapNumber,
   type UTXOChain,
   updateDerivationPath,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 import { address as btcLibAddress, initEccLib, Psbt, payments } from "bitcoinjs-lib";
 import type { ECPairInterface } from "ecpair";
 import { ECPairFactory } from "ecpair";
@@ -98,7 +102,7 @@ async function createTransaction({
   const { inputs, outputs } = accumulative({ ...inputsAndOutputs, chain, feeRate });
 
   // .inputs and .outputs will be undefined if no solution was found
-  if (!(inputs && outputs)) throw new SwapKitError("toolbox_utxo_insufficient_balance", { assetValue, sender });
+  if (!(inputs && outputs)) throw new USwapError("toolbox_utxo_insufficient_balance", { assetValue, sender });
   const getNetwork = await getUtxoNetwork();
   const psbt = new Psbt({ network: getNetwork(chain) });
 
@@ -290,7 +294,7 @@ function estimateTransactionFee(chain: UTXOChain) {
   }) => {
     const inputFees = await getInputsOutputsFee(params);
 
-    return AssetValue.from({ chain, value: SwapKitNumber.fromBigInt(BigInt(inputFees.fee), 8).getValue("string") });
+    return AssetValue.from({ chain, value: USwapNumber.fromBigInt(BigInt(inputFees.fee), 8).getValue("string") });
   };
 }
 
@@ -324,7 +328,7 @@ export async function getCreateKeysForPath<T extends keyof CreateKeysForPathRetu
         if (wif) {
           return ECPair.fromWIF(wif, network) as BchECPair;
         }
-        if (!phrase) throw new SwapKitError("toolbox_utxo_invalid_params", { error: "No phrase provided" });
+        if (!phrase) throw new USwapError("toolbox_utxo_invalid_params", { error: "No phrase provided" });
 
         const masterHDNode = HDNode.fromSeedBuffer(Buffer.from(mnemonicToSeedSync(phrase)), network);
         const keyPair = masterHDNode.derivePath(derivationPath).keyPair;
@@ -347,7 +351,7 @@ export async function getCreateKeysForPath<T extends keyof CreateKeysForPathRetu
         derivationPath: string;
       }) {
         if (!(wif || phrase))
-          throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Either phrase or wif must be provided" });
+          throw new USwapError("toolbox_utxo_invalid_params", { error: "Either phrase or wif must be provided" });
 
         const factory = ECPairFactory(secp256k1);
         const network = getNetwork(chain);
@@ -357,13 +361,13 @@ export async function getCreateKeysForPath<T extends keyof CreateKeysForPathRetu
         const seed = mnemonicToSeedSync(phrase as string);
         const master = HDKey.fromMasterSeed(seed, network).derive(derivationPath);
         if (!master.privateKey)
-          throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Could not get private key from phrase" });
+          throw new USwapError("toolbox_utxo_invalid_params", { error: "Could not get private key from phrase" });
 
         return factory.fromPrivateKey(Buffer.from(master.privateKey), { network });
       } as (params: { wif?: string; phrase?: string; derivationPath?: string }) => CreateKeysForPathReturnType[T];
     }
     default:
-      throw new SwapKitError("toolbox_utxo_not_supported", { chain });
+      throw new USwapError("toolbox_utxo_not_supported", { chain });
   }
 }
 
@@ -371,11 +375,11 @@ export function addressFromKeysGetter(chain: UTXOChain) {
   const getNetwork = getUtxoNetwork();
 
   return function getAddressFromKeys(keys: ECPairInterface | BchECPair) {
-    if (!keys) throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Keys must be provided" });
+    if (!keys) throw new USwapError("toolbox_utxo_invalid_params", { error: "Keys must be provided" });
 
     const method = nonSegwitChains.includes(chain) ? payments.p2pkh : payments.p2wpkh;
     const { address } = method({ network: getNetwork(chain), pubkey: keys.publicKey as Buffer });
-    if (!address) throw new SwapKitError("toolbox_utxo_invalid_address", { error: "Address not defined" });
+    if (!address) throw new USwapError("toolbox_utxo_invalid_address", { error: "Address not defined" });
 
     return address;
   };
@@ -387,9 +391,9 @@ function transfer(signer?: ChainSigner<Psbt, Psbt>) {
 
     const chain = assetValue.chain as UTXOChain;
 
-    if (!(signer && from)) throw new SwapKitError("toolbox_utxo_no_signer");
+    if (!(signer && from)) throw new USwapError("toolbox_utxo_no_signer");
     if (!recipient)
-      throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Recipient address must be provided" });
+      throw new USwapError("toolbox_utxo_invalid_params", { error: "Recipient address must be provided" });
     const txFeeRate = feeRate || (await getFeeRates(chain))[feeOptionKey || FeeOption.Fast];
 
     const { psbt } = await createTransaction({ assetValue, feeRate: txFeeRate, memo, recipient, sender: from });

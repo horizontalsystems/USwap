@@ -1,19 +1,23 @@
-import type { AssetValue, Chain, ChainWallet, createSwapKit, SKConfigState, WalletOption } from "@swapkit/sdk";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
 
-export type KeystoreFile = { keystore: import("@swapkit/sdk/wallets").Keystore | null; file: File; chains: Chain[] };
+import type { AssetValue, Chain, ChainWallet, createUSwap, USwapConfigState, WalletOption } from "@uswap/sdk";
 
-export interface SwapKitState {
-  swapKit: ReturnType<typeof createSwapKit> | null;
+export type KeystoreFile = { keystore: import("@uswap/sdk/wallets").Keystore | null; file: File; chains: Chain[] };
+
+export interface USwapState {
+  uSwap: ReturnType<typeof createUSwap> | null;
   walletType: WalletOption | null;
   isWalletConnected: boolean;
   isConnectingWallet: boolean;
 
-  setSwapKit: (swapKit: ReturnType<typeof createSwapKit> | null) => void;
+  setUSwap: (uSwap: ReturnType<typeof createUSwap> | null) => void;
   setWalletState: (state: { connected: boolean; type: WalletOption | null }) => void;
   setIsConnectingWallet: (isConnectingWallet: boolean) => void;
 }
 
-export type SwapKitWidgetProps = { config?: SKConfigState };
+export type USwapWidgetProps = { config?: USwapConfigState };
 
 export type UseSwapQuoteParams = { inputAsset: string | null; outputAsset: string | null; amount: string };
 

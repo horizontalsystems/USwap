@@ -1,4 +1,8 @@
-import { SwapKitError } from "@swapkit/helpers";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { USwapError } from "@uswap/helpers";
 import type { ProposalTypes } from "@walletconnect/types";
 import {
   DEFAULT_COSMOS_METHODS,
@@ -41,7 +45,7 @@ export const getSupportedMethodsByNamespace = (namespace: string) => {
     case "tron":
       return Object.values(DEFAULT_TRON_METHODS);
     default:
-      throw new SwapKitError({ errorKey: "wallet_walletconnect_namespace_not_supported", info: { namespace } });
+      throw new USwapError({ errorKey: "wallet_walletconnect_namespace_not_supported", info: { namespace } });
   }
 };
 
@@ -60,7 +64,7 @@ export const getSupportedEventsByNamespace = (namespace: string) => {
     case "tron":
       return Object.values(DEFAULT_TRON_EVENTS);
     default:
-      throw new SwapKitError({ errorKey: "wallet_walletconnect_namespace_not_supported", info: { namespace } });
+      throw new USwapError({ errorKey: "wallet_walletconnect_namespace_not_supported", info: { namespace } });
   }
 };
 

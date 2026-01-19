@@ -1,12 +1,16 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   Chain,
   type EVMChain,
   GAIAConfig,
   prepareNetworkSwitch,
-  SwapKitError,
   switchEVMWalletNetwork,
-} from "@swapkit/helpers";
-import type { TronTransaction } from "@swapkit/toolboxes/tron";
+  USwapError,
+} from "@uswap/helpers";
+import type { TronTransaction } from "@uswap/toolboxes/tron";
 import { Psbt } from "bitcoinjs-lib";
 import type { Eip1193Provider } from "ethers";
 
@@ -32,7 +36,7 @@ export async function getWalletMethods(chain: Chain) {
       ),
       async () => {
         if (!(bitget && "ethereum" in bitget)) {
-          throw new SwapKitError("wallet_bitkeep_not_found");
+          throw new USwapError("wallet_bitkeep_not_found");
         }
 
         const wallet = bitget.ethereum;
@@ -45,11 +49,11 @@ export async function getWalletMethods(chain: Chain) {
     )
     .with(Chain.Bitcoin, async () => {
       if (!(bitget && "unisat" in bitget)) {
-        throw new SwapKitError("wallet_bitkeep_not_found");
+        throw new USwapError("wallet_bitkeep_not_found");
       }
       const { unisat: wallet } = bitget;
 
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const [address] = await wallet.requestAccounts();
 
       async function signTransaction(psbt: Psbt) {
@@ -66,16 +70,16 @@ export async function getWalletMethods(chain: Chain) {
     })
     .with(Chain.Cosmos, async () => {
       if (!(bitget && "keplr" in bitget)) {
-        throw new SwapKitError("wallet_bitkeep_not_found");
+        throw new USwapError("wallet_bitkeep_not_found");
       }
       const { keplr: wallet } = bitget;
 
       await wallet.enable(GAIAConfig.chainId);
       const offlineSigner = wallet.getOfflineSignerOnlyAmino(GAIAConfig.chainId);
       const accounts = await offlineSigner.getAccounts();
-      if (!accounts?.[0]) throw new SwapKitError("wallet_bitkeep_no_accounts", { chain: Chain.Cosmos });
+      if (!accounts?.[0]) throw new USwapError("wallet_bitkeep_no_accounts", { chain: Chain.Cosmos });
 
-      const { getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+      const { getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
       const [{ address }] = accounts;
 
       const signer = {
@@ -90,10 +94,10 @@ export async function getWalletMethods(chain: Chain) {
     })
     .with(Chain.Solana, async () => {
       if (!(bitget && "solana" in bitget)) {
-        throw new SwapKitError("wallet_bitkeep_not_found");
+        throw new USwapError("wallet_bitkeep_not_found");
       }
 
-      const { getSolanaToolbox } = await import("@swapkit/toolboxes/solana");
+      const { getSolanaToolbox } = await import("@uswap/toolboxes/solana");
       const provider = bitget?.solana;
 
       // Connect to get the public key
@@ -109,10 +113,10 @@ export async function getWalletMethods(chain: Chain) {
     })
     .with(Chain.Tron, async () => {
       if (!(bitget && "tronLink" in bitget && "tronWeb" in bitget)) {
-        throw new SwapKitError("wallet_bitkeep_not_found");
+        throw new USwapError("wallet_bitkeep_not_found");
       }
 
-      const { createTronToolbox } = await import("@swapkit/toolboxes/tron");
+      const { createTronToolbox } = await import("@uswap/toolboxes/tron");
       const { tronLink, tronWeb } = bitget;
 
       // Request account access
@@ -120,7 +124,7 @@ export async function getWalletMethods(chain: Chain) {
 
       // Check if the request was successful
       if (response.code !== 200) {
-        throw new SwapKitError("wallet_connection_rejected_by_user", {
+        throw new USwapError("wallet_connection_rejected_by_user", {
           message: response.message || "User rejected connection",
         });
       }
@@ -129,7 +133,7 @@ export async function getWalletMethods(chain: Chain) {
       const address = tronWeb.defaultAddress?.base58;
 
       if (!address) {
-        throw new SwapKitError("wallet_bitkeep_no_accounts", { chain: Chain.Tron });
+        throw new USwapError("wallet_bitkeep_no_accounts", { chain: Chain.Tron });
       }
 
       // Create signer compatible with TronSigner interface
@@ -146,7 +150,7 @@ export async function getWalletMethods(chain: Chain) {
       return { ...toolbox, address };
     })
     .otherwise(() => {
-      throw new SwapKitError("wallet_chain_not_supported");
+      throw new USwapError("wallet_chain_not_supported");
     });
 }
 
@@ -157,9 +161,9 @@ export const getWeb3WalletMethods = async ({
   walletProvider?: Eip1193Provider;
   chain: EVMChain;
 }) => {
-  const { getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+  const { getEvmToolbox } = await import("@uswap/toolboxes/evm");
   const { BrowserProvider } = await import("ethers");
-  if (!walletProvider) throw new SwapKitError("wallet_provider_not_found");
+  if (!walletProvider) throw new USwapError("wallet_provider_not_found");
 
   const provider = new BrowserProvider(walletProvider, "any");
   const signer = await provider.getSigner();
@@ -170,7 +174,7 @@ export const getWeb3WalletMethods = async ({
       await switchEVMWalletNetwork(provider, chain, toolbox.getNetworkParams());
     }
   } catch {
-    throw new SwapKitError("wallet_bitkeep_failed_to_switch_network", { chain });
+    throw new USwapError("wallet_bitkeep_failed_to_switch_network", { chain });
   }
 
   return prepareNetworkSwitch({ chain, provider, toolbox });

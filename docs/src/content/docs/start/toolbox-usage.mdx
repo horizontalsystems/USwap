@@ -1,9 +1,10 @@
+{/* Modifications © 2025 Horizontal Systems. */}
 ---
 title: Toolbox Usage
-description: Direct blockchain operations with SwapKit toolboxes
+description: Direct blockchain operations with USwap toolboxes
 ---
 
-SwapKit toolboxes provide low-level blockchain operations for all supported chains. While the main SwapKit SDK handles most operations automatically, toolboxes give you direct access to chain-specific functionality when you need fine-grained control.
+USwap toolboxes provide low-level blockchain operations for all supported chains. While the main USwap SDK handles most operations automatically, toolboxes give you direct access to chain-specific functionality when you need fine-grained control.
 
 ## When to Use Toolboxes
 
@@ -19,7 +20,7 @@ For most use cases, the [main SDK](/start/getting-started) is recommended as it 
 
 ## Available Toolboxes
 
-SwapKit provides specialized toolboxes for different blockchain ecosystems:
+USwap provides specialized toolboxes for different blockchain ecosystems:
 
 - **EVM Toolbox**: For Ethereum, BSC, Arbitrum, Avalanche, Polygon, Optimism, Base, etc.
 - **UTXO Toolbox**: For Bitcoin, Bitcoin Cash, Litecoin, Dogecoin, Dash, Zcash
@@ -39,7 +40,7 @@ Before using toolboxes, make sure you understand [Core Concepts](/start/core-con
 You can initialize a toolbox either by importing specific toolbox methods like `getEvmToolbox` or `getUtxoToolbox` or by common toolbox method `getToolbox`.
 
 ```ts twoslash
-import { Chain, getEvmToolbox, getUtxoToolbox } from "@swapkit/sdk";
+import { Chain, getEvmToolbox, getUtxoToolbox } from "@uswap/sdk";
 
 const ethToolbox = await getEvmToolbox(Chain.Ethereum);
 const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
@@ -48,7 +49,7 @@ const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
 or
 
 ```ts twoslash
-import { Chain, getToolbox } from "@swapkit/sdk";
+import { Chain, getToolbox } from "@uswap/sdk";
 
 const ethToolbox = await getToolbox(Chain.Ethereum);
 const btcToolbox = await getToolbox(Chain.Bitcoin);
@@ -59,7 +60,7 @@ const btcToolbox = await getToolbox(Chain.Bitcoin);
 ### Importing and Initializing
 
 ```ts twoslash
-import { Chain, getEvmToolbox, getProvider } from "@swapkit/sdk";
+import { Chain, getEvmToolbox, getProvider } from "@uswap/sdk";
 import { ethers } from "ethers";
 
 const ethereumToolbox = await getEvmToolbox(Chain.Ethereum);
@@ -77,7 +78,7 @@ const signingToolbox = await getEvmToolbox(Chain.Ethereum, {
 #### Address Validation
 
 ```ts twoslash
-import { Chain, evmValidateAddress } from "@swapkit/sdk";
+import { Chain, evmValidateAddress } from "@uswap/sdk";
 
 const isValidAddress = evmValidateAddress({
   address: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
@@ -93,7 +94,7 @@ import {
   FeeOption,
   getEvmToolbox,
   getProvider,
-} from "@swapkit/sdk";
+} from "@uswap/sdk";
 import { ethers } from "ethers";
 
 async function transferTokens() {
@@ -126,7 +127,7 @@ async function transferTokens() {
 #### Smart Contract Interactions
 
 ```ts twoslash
-import { Chain, erc20ABI, getEvmToolbox, getProvider } from "@swapkit/sdk";
+import { Chain, erc20ABI, getEvmToolbox, getProvider } from "@uswap/sdk";
 import { ethers } from "ethers";
 
 async function interactWithContract() {
@@ -182,7 +183,7 @@ async function interactWithContract() {
 #### Fee Estimation
 
 ```ts twoslash
-import { Chain, FeeOption, getEvmToolbox } from "@swapkit/sdk";
+import { Chain, FeeOption, getEvmToolbox } from "@uswap/sdk";
 import { ethers } from "ethers";
 
 async function estimateFees() {
@@ -218,7 +219,7 @@ async function estimateFees() {
 ### Importing and Initializing
 
 ```ts twoslash
-import { Chain, getUtxoToolbox } from "@swapkit/sdk";
+import { Chain, getUtxoToolbox } from "@uswap/sdk";
 
 async function setupBitcoinToolbox() {
   const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
@@ -229,7 +230,7 @@ async function setupBitcoinToolbox() {
 ### Key Generation and Address Management
 
 ```ts twoslash
-import { Chain, getUtxoToolbox } from "@swapkit/sdk";
+import { Chain, getUtxoToolbox } from "@uswap/sdk";
 
 async function bitcoinKeysAndAddresses() {
   const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
@@ -252,7 +253,7 @@ async function bitcoinKeysAndAddresses() {
 ### Building and Signing Transactions
 
 ```ts twoslash
-import { AssetValue, Chain, FeeOption, getUtxoToolbox } from "@swapkit/sdk";
+import { AssetValue, Chain, FeeOption, getUtxoToolbox } from "@uswap/sdk";
 
 async function createBitcoinTransaction() {
   const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
@@ -300,7 +301,7 @@ async function createBitcoinTransaction() {
 ### Balance and Fee Management
 
 ```ts twoslash
-import { Chain, getUtxoToolbox } from "@swapkit/sdk";
+import { Chain, getUtxoToolbox } from "@uswap/sdk";
 
 async function getUtxoData() {
   const btcToolbox = await getUtxoToolbox(Chain.Bitcoin);
@@ -319,7 +320,7 @@ async function getUtxoData() {
 Zcash requires special handling due to its unique address format and transparent-only support:
 
 ```ts twoslash
-import { AssetValue, Chain, FeeOption, getUtxoToolbox } from "@swapkit/sdk";
+import { AssetValue, Chain, FeeOption, getUtxoToolbox } from "@uswap/sdk";
 
 async function zcashOperations() {
   const zcashToolbox = await getUtxoToolbox(Chain.Zcash, {
@@ -360,7 +361,7 @@ async function zcashOperations() {
 ### Importing and Initializing
 
 ```ts twoslash
-import { Chain, getCosmosToolbox } from "@swapkit/sdk";
+import { Chain, getCosmosToolbox } from "@uswap/sdk";
 
 function initCosmosToolbox() {
   const cosmosToolbox = await getCosmosToolbox(Chain.Cosmos);
@@ -380,7 +381,7 @@ import {
   FeeOption,
   getCosmosToolbox,
   TransferParams,
-} from "@swapkit/sdk";
+} from "@uswap/sdk";
 
 async function createThorchainWallet() {
   const toolbox = await getCosmosToolbox(Chain.THORChain);
@@ -415,7 +416,7 @@ const signedMessage = await wallet.signMessage("Hello, world!");
 ### Balances and Account Information
 
 ```ts twoslash
-import { Chain, getCosmosToolbox } from "@swapkit/sdk";
+import { Chain, getCosmosToolbox } from "@uswap/sdk";
 
 async function cosmosBalances() {
   const cosmosToolbox = await getCosmosToolbox(Chain.Cosmos);
@@ -434,7 +435,7 @@ async function cosmosBalances() {
 ### Importing and Initializing
 
 ```ts twoslash
-import { getSolanaToolbox } from "@swapkit/sdk";
+import { getSolanaToolbox } from "@uswap/sdk";
 
 function initSolanaToolbox() {
   const solanaToolbox = await getSolanaToolbox();
@@ -445,7 +446,7 @@ function initSolanaToolbox() {
 ### Key Management and Addresses
 
 ```ts twoslash
-import { getSolanaToolbox } from "@swapkit/sdk";
+import { getSolanaToolbox } from "@uswap/sdk";
 
 async function solanaKeysAndAddresses() {
   const solanaToolbox = await getSolanaToolbox();
@@ -464,7 +465,7 @@ async function solanaKeysAndAddresses() {
 ### Transactions and Transfers
 
 ```ts twoslash
-import { AssetValue, Chain, getSolanaToolbox } from "@swapkit/sdk";
+import { AssetValue, Chain, getSolanaToolbox } from "@uswap/sdk";
 
 async function solanaTransfer() {
   const solanaToolbox = await getSolanaToolbox();
@@ -485,7 +486,7 @@ async function solanaTransfer() {
       assetValue: amount,
       recipient: "ASfS6nSsF1JW76EBKsHuAj1ypBGZz6uhLSJ5QBUcCJmr",
       fromKeypair: keypair,
-      memo: "Transfer from SwapKit",
+      memo: "Transfer from USwap",
     });
 
     return txHash;
@@ -505,7 +506,7 @@ import {
   createKeyring,
   Network,
   getSubstrateToolbox,
-} from "@swapkit/sdk";
+} from "@uswap/sdk";
 
 async function initSubstrateToolbox() {
   const signer = await createKeyring(
@@ -528,7 +529,7 @@ import {
   createKeyring,
   Network,
   getSubstrateToolbox,
-} from "@swapkit/sdk";
+} from "@uswap/sdk";
 
 async function substrateTransfer() {
   const signer = await createKeyring(
@@ -565,7 +566,7 @@ async function substrateTransfer() {
 ### Importing and Initializing
 
 ```ts twoslash
-import { Chain, getRippleToolbox } from "@swapkit/sdk";
+import { Chain, getRippleToolbox } from "@uswap/sdk";
 
 const xrpToolbox = await getRippleToolbox({
   phrase: "your twelve word secret phrase here",
@@ -577,7 +578,7 @@ const xrpReadOnlyToolbox = await getRippleToolbox();
 ### Sending XRP Transactions
 
 ```ts twoslash
-import { Chain, AssetValue, FeeOption, getRippleToolbox } from "@swapkit/sdk";
+import { Chain, AssetValue, FeeOption, getRippleToolbox } from "@uswap/sdk";
 
 async function sendXRP() {
   const xrpToolbox = await getRippleToolbox({
@@ -600,7 +601,7 @@ async function sendXRP() {
 ### Balance and Validation
 
 ```ts twoslash
-import { Chain, getRippleToolbox, rippleValidateAddress } from "@swapkit/sdk";
+import { Chain, getRippleToolbox, rippleValidateAddress } from "@uswap/sdk";
 
 async function getRippleData() {
   const xrpToolbox = await getRippleToolbox();
@@ -619,7 +620,7 @@ async function getRippleData() {
 ### Importing and Initializing
 
 ```ts twoslash
-import { getNearToolbox } from "@swapkit/sdk";
+import { getNearToolbox } from "@uswap/sdk";
 
 const nearToolbox = await getNearToolbox({
   phrase: "your twelve word mnemonic phrase here",
@@ -636,7 +637,7 @@ const nearWithAccount = await getNearToolbox({
 ### Transfers and Balances
 
 ```ts twoslash
-import { AssetValue, Chain, FeeOption, getNearToolbox } from "@swapkit/sdk";
+import { AssetValue, Chain, FeeOption, getNearToolbox } from "@uswap/sdk";
 
 async function nearOperations() {
   const nearToolbox = await getNearToolbox({
@@ -660,7 +661,7 @@ async function nearOperations() {
 ### Contract Interactions
 
 ```ts twoslash
-import { getNearToolbox } from "@swapkit/sdk";
+import { getNearToolbox } from "@uswap/sdk";
 
 async function nearContracts() {
   const nearToolbox = await getNearToolbox({
@@ -688,7 +689,7 @@ For complex operations involving multiple chains, you can use multiple toolboxes
 
 ```ts twoslash
 
-import { AssetValue, Chain, getUtxoToolbox, getEvmToolbox } from "@swapkit/sdk";
+import { AssetValue, Chain, getUtxoToolbox, getEvmToolbox } from "@uswap/sdk";
 import { ethers } from "ethers";
 
 async function crossChainOperation() {

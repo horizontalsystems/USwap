@@ -1,11 +1,15 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { match } from "ts-pattern";
-import type { SwapKitNumber } from "./swapKitNumber";
+import type { USwapNumber } from "./uSwapNumber";
 
 type NumberPrimitivesType = { bigint: bigint; number: number; string: string };
 export type NumberPrimitives = bigint | number | string;
-type InitialisationValueType = NumberPrimitives | BigIntArithmetics | SwapKitNumber;
+type InitialisationValueType = NumberPrimitives | BigIntArithmetics | USwapNumber;
 
-type SKBigIntParams = InitialisationValueType | { decimal?: number; value: number | string };
+type USwapBigIntParams = InitialisationValueType | { decimal?: number; value: number | string };
 type AllowedNumberTypes = "bigint" | "number" | "string";
 
 const DEFAULT_DECIMAL = 8;
@@ -56,11 +60,11 @@ export class BigIntArithmetics {
     });
   }
 
-  static shiftDecimals({ value, from, to }: { value: InstanceType<typeof SwapKitNumber>; from: number; to: number }) {
+  static shiftDecimals({ value, from, to }: { value: InstanceType<typeof USwapNumber>; from: number; to: number }) {
     return BigIntArithmetics.fromBigInt((value.getBaseValue("bigint") * toMultiplier(to)) / toMultiplier(from), to);
   }
 
-  constructor(params: SKBigIntParams) {
+  constructor(params: USwapBigIntParams) {
     const value = getStringValue(params);
     const isComplex = typeof params === "object";
     this.decimal = isComplex ? params.decimal : undefined;
@@ -73,7 +77,7 @@ export class BigIntArithmetics {
     this.#setValue(value);
   }
 
-  set(value: SKBigIntParams): this {
+  set(value: USwapBigIntParams): this {
     return new (this.constructor as any)({
       decimal: this.decimal,
       identifier: (this as any).toString?.({ includeSynthProtocol: true }),
@@ -172,7 +176,7 @@ export class BigIntArithmetics {
     if (int.length >= significantDigits) return int.slice(0, significantDigits).padEnd(int.length, "0");
     if (hasInteger) return `${int}.${dec.slice(0, significantDigits - int.length)}`;
 
-    const trimmed = Number.parseInt(dec, 10).toString();
+    const trimmed = BigInt(dec).toString();
     const sliced = trimmed.slice(0, significantDigits);
     const leadingZeros = dec.length - trimmed.length;
 
@@ -342,7 +346,7 @@ function getFloatDecimals(value: string) {
   return Math.max(decimals, DEFAULT_DECIMAL);
 }
 
-function getStringValue(param: SKBigIntParams) {
+function getStringValue(param: USwapBigIntParams) {
   return typeof param === "object" ? ("getValue" in param ? param.getValue("string") : param.value) : param;
 }
 

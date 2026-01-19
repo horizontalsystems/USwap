@@ -1,9 +1,13 @@
-import { SKConfig } from "./swapKitConfig";
-import { SwapKitError } from "./swapKitError";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
 
-type RetryConfig = { maxRetries?: number; baseDelay?: number; maxDelay?: number; backoffMultiplier?: number };
+import { USwapConfig } from "./uSwapConfig";
+import { USwapError } from "./uSwapError";
 
-type Options = RequestInit & {
+export type RetryConfig = { maxRetries?: number; baseDelay?: number; maxDelay?: number; backoffMultiplier?: number };
+
+export type RequestOptions = RequestInit & {
   /**
    * @deprecated @V4 Use onSuccess instead - will be removed in next major
    */
@@ -26,14 +30,16 @@ const makeRequest = async (url: string, config: RequestInit) => {
   const response = await fetch(url, config);
 
   if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
     const errorData = { status: response.status, statusText: response.statusText };
-    throw new SwapKitError({ errorKey: "helpers_invalid_response", info: errorData }, errorData);
+    const errorInfo = { ...errorData, ...(errorBody && { errorData: errorBody }) };
+    throw new USwapError({ errorKey: "helpers_invalid_response", info: errorData }, errorInfo);
   }
   return response.json();
 };
 
-function fetchWithConfig(method: "GET" | "POST", extendOptions: Options = {}) {
-  return async function methodFetchWithConfig<T>(url: string, options: Options = {}): Promise<T> {
+function fetchWithConfig(method: "GET" | "POST", extendOptions: RequestOptions = {}) {
+  return async function methodFetchWithConfig<T>(url: string, options: RequestOptions = {}): Promise<T> {
     const {
       searchParams,
       json,
@@ -48,7 +54,7 @@ function fetchWithConfig(method: "GET" | "POST", extendOptions: Options = {}) {
       responseHandler,
       ...fetchOptions
     } = { ...extendOptions, ...options };
-    const requestOptions = SKConfig.get("requestOptions");
+    const requestOptions = USwapConfig.get("requestOptions");
 
     const retryConfig = { ...requestOptions.retry, ...retry };
     const isJson = !!json || url.endsWith(".json");
@@ -100,8 +106,8 @@ function buildUrl(url: string, searchParams?: Record<string, string>) {
 }
 
 export const RequestClient = {
-  extend: (extendOptions: Options) => ({
-    extend: (newOptions: Options) => RequestClient.extend({ ...extendOptions, ...newOptions }),
+  extend: (extendOptions: RequestOptions) => ({
+    extend: (newOptions: RequestOptions) => RequestClient.extend({ ...extendOptions, ...newOptions }),
     get: fetchWithConfig("GET", extendOptions),
     post: fetchWithConfig("POST", extendOptions),
   }),

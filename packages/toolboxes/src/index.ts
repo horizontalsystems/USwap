@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   AssetValue,
   Chain,
@@ -9,10 +13,10 @@ import {
   type GenericCreateTransactionParams,
   type SubstrateChain,
   SubstrateChains,
-  SwapKitError,
+  USwapError,
   type UTXOChain,
   UTXOChains,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 import type { getCardanoToolbox } from "./cardano";
 import type { getCosmosToolbox } from "./cosmos";
 import type { ETHToolbox, EVMCreateTransactionParams, getEvmToolbox } from "./evm";
@@ -255,6 +259,6 @@ export async function getToolbox<T extends keyof Toolboxes>(
       return tonToolbox as Toolboxes[T];
     })
     .otherwise(() => {
-      throw new SwapKitError("toolbox_not_supported", { chain });
+      throw new USwapError("toolbox_not_supported", { chain });
     });
 }

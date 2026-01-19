@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type {
   Connection,
   PublicKey,
@@ -16,9 +20,9 @@ import {
   getChainConfig,
   getRPCUrl,
   NetworkDerivationPath,
-  SwapKitError,
+  USwapError,
   updateDerivationPath,
-} from "@swapkit/helpers";
+} from "@uswap/helpers";
 import { match, P } from "ts-pattern";
 import type { SolanaCreateTransactionParams, SolanaProvider, SolanaTransferParams } from "./index";
 
@@ -127,7 +131,7 @@ export async function getSolanaToolbox(
 
   function getBalance(addressParam?: string) {
     const address = addressParam || getAddress();
-    if (!address) throw new SwapKitError("core_wallet_connection_not_found");
+    if (!address) throw new USwapError("core_wallet_connection_not_found");
     return getSolanaBalance(address);
   }
 
@@ -170,7 +174,7 @@ function estimateTransactionFee(getConnection: () => Promise<Connection>) {
     const feeInLamports = await connection.getFeeForMessage(message);
 
     if (feeInLamports.value === null) {
-      throw new SwapKitError("toolbox_solana_fee_estimation_failed", "Could not estimate Solana fee.");
+      throw new USwapError("toolbox_solana_fee_estimation_failed", "Could not estimate Solana fee.");
     }
 
     const { baseDecimal } = getChainConfig(Chain.Solana);
@@ -283,7 +287,7 @@ function createTransaction(getConnection: () => Promise<Connection>) {
     const validateAddress = await getSolanaAddressValidator();
 
     if (!(isProgramDerivedAddress || validateAddress(recipient))) {
-      throw new SwapKitError("core_transaction_invalid_recipient_address");
+      throw new USwapError("core_transaction_invalid_recipient_address");
     }
 
     const connection = await getConnection();
@@ -295,7 +299,7 @@ function createTransaction(getConnection: () => Promise<Connection>) {
     });
 
     if (!transaction) {
-      throw new SwapKitError("core_transaction_invalid_sender_address");
+      throw new USwapError("core_transaction_invalid_sender_address");
     }
 
     if (memo) transaction.add(createMemoInstruction(memo));
@@ -318,7 +322,7 @@ async function createTransactionFromInstructions({
   const transaction = new Transaction().add(...instructions);
 
   if (!transaction) {
-    throw new SwapKitError("core_transaction_invalid_sender_address");
+    throw new USwapError("core_transaction_invalid_sender_address");
   }
 
   return transaction;
@@ -327,7 +331,7 @@ async function createTransactionFromInstructions({
 function transfer(getConnection: () => Promise<Connection>, signer?: SolanaSigner) {
   return async ({ recipient, assetValue, memo, isProgramDerivedAddress }: SolanaTransferParams) => {
     if (!signer) {
-      throw new SwapKitError("core_transaction_invalid_sender_address");
+      throw new USwapError("core_transaction_invalid_sender_address");
     }
 
     const sender = signer.publicKey?.toString() ?? (await (signer as SolanaProvider).connect()).publicKey.toString();
@@ -362,7 +366,7 @@ function signTransaction(getConnection: () => Promise<Connection>, signer?: Sola
   return async (transaction: Transaction | VersionedTransaction) => {
     const { VersionedTransaction } = await import("@solana/web3.js");
     if (!signer) {
-      throw new SwapKitError("toolbox_solana_no_signer");
+      throw new USwapError("toolbox_solana_no_signer");
     }
 
     if (!(transaction instanceof VersionedTransaction)) {

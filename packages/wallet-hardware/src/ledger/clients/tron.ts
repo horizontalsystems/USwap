@@ -1,11 +1,10 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type TronApp from "@ledgerhq/hw-app-trx";
-import {
-  type DerivationPathArray,
-  derivationPathToString,
-  NetworkDerivationPath,
-  SwapKitError,
-} from "@swapkit/helpers";
-import type { TronSignedTransaction, TronSigner, TronTransaction } from "@swapkit/toolboxes/tron";
+import { type DerivationPathArray, derivationPathToString, NetworkDerivationPath, USwapError } from "@uswap/helpers";
+import type { TronSignedTransaction, TronSigner, TronTransaction } from "@uswap/toolboxes/tron";
 
 import { getLedgerTransport } from "../helpers/getLedgerTransport";
 
@@ -35,7 +34,7 @@ export class TronLedgerInterface implements TronSigner {
 
   getAddress = async (): Promise<string> => {
     const response = await this.getAddressAndPubKey();
-    if (!response) throw new SwapKitError("wallet_ledger_failed_to_get_address");
+    if (!response) throw new USwapError("wallet_ledger_failed_to_get_address");
     return response.address;
   };
 
@@ -43,7 +42,7 @@ export class TronLedgerInterface implements TronSigner {
     await this.createTransportAndLedger();
     const result = await this.ledgerApp?.getAddress(this.derivationPath);
 
-    if (!result) throw new SwapKitError("wallet_ledger_failed_to_get_address");
+    if (!result) throw new USwapError("wallet_ledger_failed_to_get_address");
 
     return { address: result.address, publicKey: result.publicKey };
   };
@@ -57,7 +56,7 @@ export class TronLedgerInterface implements TronSigner {
     await this.createTransportAndLedger();
 
     if (!this.ledgerApp) {
-      throw new SwapKitError("wallet_ledger_transport_error");
+      throw new USwapError("wallet_ledger_transport_error");
     }
 
     // Tron transactions need to be serialized before signing
@@ -71,13 +70,13 @@ export class TronLedgerInterface implements TronSigner {
       );
 
       if (!signature) {
-        throw new SwapKitError("wallet_ledger_signing_error");
+        throw new USwapError("wallet_ledger_signing_error");
       }
 
       // Return the signed transaction in Tron's expected format
       return { ...transaction, signature: [signature] };
     } catch (error) {
-      throw new SwapKitError("wallet_ledger_signing_error", { error });
+      throw new USwapError("wallet_ledger_signing_error", { error });
     }
   };
 }

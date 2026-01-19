@@ -1,5 +1,9 @@
-import { AssetValue, Chain, ChainId, filterSupportedChains, SwapKitError, WalletOption } from "@swapkit/helpers";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, Chain, ChainId, filterSupportedChains, USwapError, WalletOption } from "@uswap/helpers";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import type { Eip1193Provider } from "ethers";
 import {
   getKEEPKEYAddress,
@@ -57,7 +61,7 @@ async function getWalletMethods(chain: (typeof KEEPKEY_BEX_SUPPORTED_CHAINS)[num
   switch (chain) {
     case Chain.Maya:
     case Chain.THORChain: {
-      const { getCosmosToolbox, THORCHAIN_GAS_VALUE, MAYA_GAS_VALUE } = await import("@swapkit/toolboxes/cosmos");
+      const { getCosmosToolbox, THORCHAIN_GAS_VALUE, MAYA_GAS_VALUE } = await import("@uswap/toolboxes/cosmos");
 
       const gasLimit = chain === Chain.Maya ? MAYA_GAS_VALUE : THORCHAIN_GAS_VALUE;
       const toolbox = await getCosmosToolbox(chain);
@@ -71,15 +75,15 @@ async function getWalletMethods(chain: (typeof KEEPKEY_BEX_SUPPORTED_CHAINS)[num
 
     case Chain.Cosmos:
     case Chain.Kujira: {
-      const { getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+      const { getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
 
       // @ts-expect-error assumed available connection
       const signer = window.keepkey?.cosmos?.getOfflineSignerOnlyAmino(ChainId[chain]);
-      if (!signer) throw new SwapKitError("wallet_keepkey_signer_not_found");
+      if (!signer) throw new USwapError("wallet_keepkey_signer_not_found");
       const toolbox = await getCosmosToolbox(chain, { signer });
 
       const accounts = await signer.getAccounts();
-      if (!accounts?.[0]?.address) throw new SwapKitError("wallet_keepkey_no_accounts");
+      if (!accounts?.[0]?.address) throw new USwapError("wallet_keepkey_no_accounts");
 
       const [{ address }] = accounts;
 
@@ -91,7 +95,7 @@ async function getWalletMethods(chain: (typeof KEEPKEY_BEX_SUPPORTED_CHAINS)[num
     case Chain.BitcoinCash:
     case Chain.Dogecoin:
     case Chain.Litecoin: {
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const toolbox = await getUtxoToolbox(chain);
 
       const getBalance = async () => {
@@ -112,13 +116,13 @@ async function getWalletMethods(chain: (typeof KEEPKEY_BEX_SUPPORTED_CHAINS)[num
     case Chain.Optimism:
     case Chain.Polygon:
     case Chain.Avalanche: {
-      const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@swapkit/helpers");
-      const { getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+      const { prepareNetworkSwitch, switchEVMWalletNetwork } = await import("@uswap/helpers");
+      const { getEvmToolbox } = await import("@uswap/toolboxes/evm");
       const { BrowserProvider } = await import("ethers");
       const ethereumWindowProvider = getKEEPKEYProvider(chain) as Eip1193Provider;
 
       if (!ethereumWindowProvider) {
-        throw new SwapKitError("wallet_keepkey_not_found");
+        throw new USwapError("wallet_keepkey_not_found");
       }
 
       const provider = new BrowserProvider(ethereumWindowProvider, "any");
@@ -132,7 +136,7 @@ async function getWalletMethods(chain: (typeof KEEPKEY_BEX_SUPPORTED_CHAINS)[num
           await switchEVMWalletNetwork(provider, chain, networkParams);
         }
       } catch {
-        throw new SwapKitError({
+        throw new USwapError({
           errorKey: "wallet_failed_to_add_or_switch_network",
           info: { chain, wallet: WalletOption.KEEPKEY },
         });

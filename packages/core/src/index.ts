@@ -1,3 +1,7 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import {
   ApproveMode,
   type ApproveReturnType,
@@ -11,31 +15,43 @@ import {
   type FeeOption,
   type GenericTransferParams,
   ProviderName as PluginNameEnum,
-  SKConfig,
-  type SKConfigState,
-  SwapKitError,
   type SwapParams,
+  USwapConfig,
+  type USwapConfigState,
+  USwapError,
   UTXOChains,
-} from "@swapkit/helpers";
-import type { EVMTransaction, QuoteResponseRoute } from "@swapkit/helpers/api";
-import type { createPlugin } from "@swapkit/plugins";
-import type { FullWallet } from "@swapkit/toolboxes";
-import type { EVMCreateTransactionParams, EVMTransferParams } from "@swapkit/toolboxes/evm";
-import type { createWallet } from "@swapkit/wallets";
+  type WalletOption,
+} from "@uswap/helpers";
+import type { EVMTransaction, QuoteResponseRoute } from "@uswap/helpers/api";
+import type { createPlugin } from "@uswap/plugins";
+import type { FullWallet } from "@uswap/toolboxes";
+import type { EVMCreateTransactionParams, EVMTransferParams } from "@uswap/toolboxes/evm";
+import type { createWallet } from "@uswap/wallets";
 
-export type SwapKitParams<P, W> = { config?: SKConfigState; plugins?: P; wallets?: W };
+export type USwapParams<P, W> = { config?: USwapConfigState; plugins?: P; wallets?: W };
 
-export function SwapKit<
+export function USwap<
   Plugins extends ReturnType<typeof createPlugin>,
   Wallets extends ReturnType<typeof createWallet>,
->({ config, plugins, wallets }: { config?: SKConfigState; plugins?: Plugins; wallets?: Wallets } = {}) {
+>({
+  config,
+  plugins,
+  wallets,
+  getActiveWallet,
+}: {
+  config?: USwapConfigState;
+  plugins?: Plugins;
+  wallets?: Wallets;
+  getActiveWallet?: () => WalletOption | undefined;
+} = {}) {
   if (config) {
-    SKConfig.set(config);
+    USwapConfig.set(config);
   }
 
   type PluginName = keyof Plugins;
-  const connectedWallets = {} as FullWallet;
-  type ConnectedChains = keyof typeof connectedWallets;
+  const connectedWalletsByChain = {} as FullWallet;
+  const connectedWalletsByWallet = new Map<WalletOption, Map<Chain, FullWallet[Chain]>>();
+  type ConnectedChains = keyof typeof connectedWalletsByChain;
   type ActionType = "transfer" | "approve" | "swap";
 
   type ActionParams<P extends PluginName> = {
@@ -46,7 +62,7 @@ export function SwapKit<
 
   const availablePlugins = Object.entries(plugins || {}).reduce(
     (acc, [pluginName, plugin]) => {
-      const methods = plugin({ getWallet });
+      const methods = plugin({ getWallet: getSelectedWallet });
 
       acc[pluginName as PluginName] = methods as ReturnType<Plugins[keyof Plugins]>;
       return acc;
@@ -66,29 +82,37 @@ export function SwapKit<
     },
   );
 
-  function getSwapKitPlugin<T extends PluginName>(pluginName?: T) {
+  function getUSwapPlugin<T extends PluginName>(pluginName?: T) {
     const pluginByName = pluginName && availablePlugins[pluginName];
     const pluginByProvider = Object.values(availablePlugins).find((plugin) =>
-      plugin.supportedSwapkitProviders?.includes(pluginName),
+      plugin.supportedUSwapProviders?.includes(pluginName),
     );
     const plugin = pluginByName || pluginByProvider;
 
     if (!plugin) {
-      throw new SwapKitError("core_plugin_not_found");
+      throw new USwapError("core_plugin_not_found");
     }
 
     return plugin as ReturnType<Plugins[T]>;
   }
 
   function addChain<T extends Chain>(connectWallet: Omit<ChainWallet<T>, "balance"> & { balance?: AssetValue[] }) {
-    const currentWallet = getWallet(connectWallet.chain);
+    const currentWallet = getWalletByChain(connectWallet.chain);
 
     const balance = connectWallet?.balance ||
       currentWallet?.balance || [AssetValue.from({ chain: connectWallet.chain })];
 
-    const wallet = { ...currentWallet, ...connectWallet, balance } as FullWallet[T];
+    const wallet = { ...currentWallet, ...connectWallet, balance };
+    connectedWalletsByChain[connectWallet.chain] = wallet as FullWallet[T];
 
-    connectedWallets[connectWallet.chain] = wallet;
+    const walletOption = connectWallet.walletType as WalletOption;
+    let chainMap = connectedWalletsByWallet.get(walletOption);
+    if (!chainMap) {
+      chainMap = new Map<Chain, any>();
+      connectedWalletsByWallet.set(walletOption, chainMap);
+    }
+
+    chainMap.set(connectWallet.chain, wallet as FullWallet[T]);
 
     return wallet;
   }
@@ -114,7 +138,7 @@ export function SwapKit<
         return plugin.approveAssetValue({ assetValue }) as ApproveReturnType<T>;
       }
 
-      throw new SwapKitError({
+      throw new USwapError({
         errorKey: "core_approve_asset_target_invalid",
         info: { message: `Target ${String(spenderAddress)} cannot be used for approve operation` },
       });
@@ -128,12 +152,12 @@ export function SwapKit<
       return Promise.resolve(type === "checkOnly" ? true : "approved") as ApproveReturnType<T>;
     }
 
-    const wallet = getWallet(chain);
+    const wallet = getWalletByChain(chain);
     const walletAction = type === "checkOnly" ? wallet.isApproved : wallet.approve;
-    if (!walletAction) throw new SwapKitError("core_wallet_connection_not_found");
+    if (!walletAction) throw new USwapError("core_wallet_connection_not_found");
 
     if (!(assetValue.address && wallet.address && typeof spenderAddress === "string")) {
-      throw new SwapKitError("core_approve_asset_address_or_from_not_found");
+      throw new USwapError("core_approve_asset_address_or_from_not_found");
     }
 
     return walletAction({
@@ -147,16 +171,29 @@ export function SwapKit<
   /**
    * @Public
    */
-  function getWallet<T extends ConnectedChains>(chain: T) {
-    return connectedWallets[chain];
+  function getWallet<T extends Chain>(walletOption: WalletOption, chain: T): FullWallet[T] {
+    return connectedWalletsByWallet.get(walletOption)?.get(chain) as FullWallet[T];
+  }
+
+  function getWalletByChain<T extends ConnectedChains>(chain: T) {
+    return connectedWalletsByChain[chain];
+  }
+
+  function getSelectedWallet<T extends ConnectedChains>(chain: T): FullWallet[T] {
+    const selected = getActiveWallet?.();
+    if (!selected) {
+      throw new Error(`Unknown connected chain: ${chain}`);
+    }
+
+    return getWallet(selected, chain) as FullWallet[T];
   }
 
   function getAllWallets() {
-    return { ...connectedWallets };
+    return { ...connectedWalletsByChain };
   }
 
   function getAddress<T extends Chain>(chain: T) {
-    return getWallet(chain)?.address || "";
+    return getWalletByChain(chain)?.address || "";
   }
 
   function approveAssetValue(assetValue: AssetValue, contractAddress: string | PluginName) {
@@ -168,27 +205,37 @@ export function SwapKit<
   }
 
   function disconnectChain<T extends Chain>(chain: T) {
-    const wallet = getWallet(chain);
+    const wallet = getWalletByChain(chain);
+    if (wallet?.walletType) {
+      const chainMap = connectedWalletsByWallet.get(wallet.walletType as WalletOption);
+      if (chainMap) {
+        chainMap.delete(chain);
+        if (chainMap.size === 0) {
+          connectedWalletsByWallet.delete(wallet.walletType as WalletOption);
+        }
+      }
+    }
+
     wallet?.disconnect?.();
-    delete connectedWallets[chain];
+    delete connectedWalletsByChain[chain];
   }
 
   function disconnectAll() {
-    for (const chain of Object.keys(connectedWallets) as (keyof typeof connectedWallets)[]) {
+    for (const chain of Object.keys(connectedWalletsByChain) as (keyof typeof connectedWalletsByChain)[]) {
       disconnectChain(chain);
     }
   }
 
   function getBalance<T extends Chain, R extends boolean>(chain: T, refresh?: R): ConditionalAssetValueReturn<R> {
     return (
-      refresh ? getWalletWithBalance(chain).then(({ balance }) => balance) : getWallet(chain)?.balance || []
+      refresh ? getWalletWithBalance(chain).then(({ balance }) => balance) : getWalletByChain(chain)?.balance || []
     ) as ConditionalAssetValueReturn<R>;
   }
 
   async function getWalletWithBalance<T extends Chain>(chain: T, scamFilter = true) {
-    const wallet = getWallet(chain);
+    const wallet = getWalletByChain(chain);
     if (!wallet) {
-      throw new SwapKitError("core_wallet_connection_not_found");
+      throw new USwapError("core_wallet_connection_not_found");
     }
     const defaultBalance = [AssetValue.from({ chain })];
     wallet.balance = defaultBalance;
@@ -202,36 +249,36 @@ export function SwapKit<
   }
 
   function swap<T extends PluginName>({ route, pluginName, ...rest }: SwapParams<T, QuoteResponseRoute>) {
-    const plugin = getSwapKitPlugin(pluginName || route.providers[0]);
+    const plugin = getUSwapPlugin(pluginName || route.providers[0]);
 
     if ("swap" in plugin) {
       // @ts-expect-error TODO: fix this
       return plugin.swap({ ...rest, route });
     }
 
-    throw new SwapKitError("core_plugin_swap_not_found");
+    throw new USwapError("core_plugin_swap_not_found");
   }
 
   function transfer({ assetValue, ...params }: GenericTransferParams | EVMTransferParams) {
     const chain = assetValue.chain;
-    if ([Chain.Radix].includes(chain) || !getWallet(chain)) {
-      throw new SwapKitError("core_wallet_connection_not_found");
+    if ([Chain.Radix].includes(chain) || !getWalletByChain(chain)) {
+      throw new USwapError("core_wallet_connection_not_found");
     }
-    const wallet = getWallet(chain as Exclude<Chain, typeof Chain.Radix | typeof Chain.Near>);
+    const wallet = getWalletByChain(chain as Exclude<Chain, typeof Chain.Radix | typeof Chain.Near>);
 
     // we need to simplify this to one object params
     return wallet.transfer({ ...params, assetValue });
   }
 
   function signMessage({ chain, message }: { chain: Chain; message: string }) {
-    const wallet = getWallet(chain);
-    if (!wallet) throw new SwapKitError("core_wallet_connection_not_found");
+    const wallet = getWalletByChain(chain);
+    if (!wallet) throw new USwapError("core_wallet_connection_not_found");
 
     if ("signMessage" in wallet) {
       return wallet.signMessage?.(message);
     }
 
-    throw new SwapKitError({
+    throw new USwapError({
       errorKey: "core_wallet_sign_message_not_supported",
       info: { chain, wallet: wallet.walletType },
     });
@@ -249,10 +296,10 @@ export function SwapKit<
     address: string;
   }) {
     if (chain !== Chain.THORChain) {
-      throw new SwapKitError({ errorKey: "core_verify_message_not_supported", info: { chain } });
+      throw new USwapError({ errorKey: "core_verify_message_not_supported", info: { chain } });
     }
 
-    const { getCosmosToolbox } = await import("@swapkit/toolboxes/cosmos");
+    const { getCosmosToolbox } = await import("@uswap/toolboxes/cosmos");
     const toolbox = await getCosmosToolbox(chain);
 
     return toolbox.verifySignature({ address, message, signature });
@@ -270,7 +317,7 @@ export function SwapKit<
     const { assetValue } = params;
     const { chain } = assetValue;
 
-    if (!getWallet(chain as Chain)) throw new SwapKitError("core_wallet_connection_not_found");
+    if (!getWalletByChain(chain as Chain)) throw new USwapError("core_wallet_connection_not_found");
 
     const baseValue = AssetValue.from({ chain });
     const { match } = await import("ts-pattern");
@@ -278,7 +325,7 @@ export function SwapKit<
     return match(chain as Chain)
       .returnType<Promise<AssetValue | undefined> | AssetValue | undefined>()
       .with(...EVMChains, (chain) => {
-        const { address, ...wallet } = getWallet(chain);
+        const { address, ...wallet } = getWalletByChain(chain);
 
         const tx = match(type as ActionType)
           .with("transfer", () => wallet.createTransferTx(params as EVMCreateTransactionParams))
@@ -315,25 +362,25 @@ export function SwapKit<
         return wallet.estimateTransactionFee({ ...tx, chain, feeOption: feeOptionKey });
       })
       .with(...UTXOChains, (chain) => {
-        const { address, ...wallet } = getWallet(chain);
+        const { address, ...wallet } = getWalletByChain(chain);
         return wallet.estimateTransactionFee({ ...params, feeOptionKey, recipient: address, sender: address });
       })
       .with(...CosmosChains, async () => {
-        const { estimateTransactionFee } = await import("@swapkit/toolboxes/cosmos");
+        const { estimateTransactionFee } = await import("@uswap/toolboxes/cosmos");
         return estimateTransactionFee(params);
       })
       .with(Chain.Polkadot, (chain) => {
-        const wallet = getWallet(chain);
+        const wallet = getWalletByChain(chain);
         return wallet.estimateTransactionFee({ ...params, recipient: wallet.address });
       })
       .with(Chain.Tron, (chain) => {
-        const { address, ...wallet } = getWallet(chain);
+        const { address, ...wallet } = getWalletByChain(chain);
         return wallet.estimateTransactionFee({ ...params, recipient: address, sender: address });
       })
-      .with(Chain.Ripple, (chain) => getWallet(chain).estimateTransactionFee())
-      .with(Chain.Ton, (chain) => getWallet(chain).estimateTransactionFee())
-      .with(Chain.Cardano, (chain) => getWallet(chain).estimateTransactionFee())
-      .with(Chain.Sui, (chain) => getWallet(chain).estimateTransactionFee())
+      .with(Chain.Ripple, (chain) => getWalletByChain(chain).estimateTransactionFee())
+      .with(Chain.Ton, (chain) => getWalletByChain(chain).estimateTransactionFee())
+      .with(Chain.Cardano, (chain) => getWalletByChain(chain).estimateTransactionFee())
+      .with(Chain.Sui, (chain) => getWalletByChain(chain).estimateTransactionFee())
       .otherwise(async () => baseValue);
   }
 
@@ -349,6 +396,7 @@ export function SwapKit<
     getAllWallets,
     getBalance,
     getWallet,
+    getWalletByChain,
     getWalletWithBalance,
     isAssetValueApproved,
     signMessage,
@@ -358,4 +406,4 @@ export function SwapKit<
   };
 }
 
-export * from "@swapkit/helpers";
+export * from "@uswap/helpers";

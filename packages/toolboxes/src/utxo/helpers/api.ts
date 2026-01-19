@@ -1,5 +1,9 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import { networks as zcashNetworks } from "@bitgo/utxo-lib";
-import { Chain, getRPCUrl, RequestClient, SKConfig, SwapKitError, type UTXOChain, warnOnce } from "@swapkit/helpers";
+import { Chain, getRPCUrl, RequestClient, USwapConfig, USwapError, type UTXOChain, warnOnce } from "@uswap/helpers";
 import { networks } from "bitcoinjs-lib";
 // @ts-expect-error
 import coininfo from "coininfo";
@@ -26,7 +30,7 @@ async function broadcastUTXOTx({ chain, txHash }: { chain: Chain; txHash: string
     }>(url, { body, headers: { "Content-Type": "application/json" } });
 
     if (response.context.code !== 200) {
-      throw new SwapKitError("toolbox_utxo_broadcast_failed", {
+      throw new USwapError("toolbox_utxo_broadcast_failed", {
         error: response.context.error || "Transaction broadcast failed",
       });
     }
@@ -45,11 +49,11 @@ async function broadcastUTXOTx({ chain, txHash }: { chain: Chain; txHash: string
       }>(rpcUrl, { body: rpcBody, headers: { "Content-Type": "application/json" } });
 
       if (rpcResponse.error) {
-        throw new SwapKitError("toolbox_utxo_broadcast_failed", { error: rpcResponse.error?.message });
+        throw new USwapError("toolbox_utxo_broadcast_failed", { error: rpcResponse.error?.message });
       }
 
       if (rpcResponse.result.includes('"code":-26')) {
-        throw new SwapKitError("toolbox_utxo_invalid_transaction", { error: "Transaction amount was too low" });
+        throw new USwapError("toolbox_utxo_invalid_transaction", { error: "Transaction amount was too low" });
       }
 
       return rpcResponse.result;
@@ -121,13 +125,13 @@ async function blockchairRequest<T>(url: string, apiKey?: string): Promise<T> {
   );
 
   if (!response || response.context.code !== 200)
-    throw new SwapKitError("toolbox_utxo_api_error", { error: `Failed to query ${url}` });
+    throw new USwapError("toolbox_utxo_api_error", { error: `Failed to query ${url}` });
 
   return response.data as T;
 }
 
 async function getAddressData({ address, chain, apiKey }: BlockchairParams<{ address?: string }>) {
-  if (!address) throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Address is required" });
+  if (!address) throw new USwapError("toolbox_utxo_invalid_params", { error: "Address is required" });
 
   try {
     const response = await blockchairRequest<BlockchairAddressResponse>(
@@ -148,7 +152,7 @@ async function getUnconfirmedBalance({ address, chain, apiKey }: BlockchairParam
 }
 
 async function getRawTx({ chain, apiKey, txHash }: BlockchairParams<{ txHash?: string }>) {
-  if (!txHash) throw new SwapKitError("toolbox_utxo_invalid_params", { error: "TxHash is required" });
+  if (!txHash) throw new USwapError("toolbox_utxo_invalid_params", { error: "TxHash is required" });
 
   try {
     const rawTxResponse = await blockchairRequest<BlockchairRawTransactionResponse>(
@@ -223,7 +227,7 @@ async function getUnspentUtxos({
   offset = 0,
   limit = 30,
 }: BlockchairFetchUnspentUtxoParams): Promise<Awaited<ReturnType<typeof fetchUtxosBatch>>> {
-  if (!address) throw new SwapKitError("toolbox_utxo_invalid_params", { error: "Address is required" });
+  if (!address) throw new USwapError("toolbox_utxo_invalid_params", { error: "Address is required" });
 
   try {
     const utxos = await fetchUtxosBatch({ address, apiKey, chain, limit, offset, targetValue });
@@ -290,7 +294,7 @@ async function getUtxos({
 }
 
 export function getUtxoApi(chain: UTXOChain) {
-  const apiKey = SKConfig.get("apiKeys").blockchair || "";
+  const apiKey = USwapConfig.get("apiKeys").blockchair || "";
 
   warnOnce({
     condition: !apiKey,
@@ -340,7 +344,7 @@ export function getUtxoNetwork() {
       }
 
       default:
-        throw new SwapKitError("toolbox_utxo_not_supported", { chain });
+        throw new USwapError("toolbox_utxo_not_supported", { chain });
     }
   };
 }

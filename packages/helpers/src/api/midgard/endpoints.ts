@@ -1,5 +1,9 @@
-import { AssetValue, RequestClient, SwapKitNumber } from "@swapkit/helpers";
-import { Chain, getChainConfig, type TCLikeChain } from "@swapkit/types";
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
+import { AssetValue, RequestClient, USwapNumber } from "@uswap/helpers";
+import { Chain, getChainConfig, type TCLikeChain } from "@uswap/types";
 import type {
   Action,
   ActionQuery,
@@ -303,7 +307,7 @@ function getLiquidityPosition<IsThorchain extends boolean = true>({
       assetWithdrawn: getPoolAsset({ asset: p.pool, value: p.assetWithdrawn }),
       dateFirstAdded: p.dateFirstAdded,
       dateLastAdded: p.dateLastAdded,
-      poolShare: new SwapKitNumber(p.liquidityUnits).div(p.pool),
+      poolShare: new USwapNumber(p.liquidityUnits).div(p.pool),
     }));
   };
 }

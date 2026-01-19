@@ -1,16 +1,20 @@
+/**
+ * Modifications © 2025 Horizontal Systems.
+ */
+
 import type { Wallet } from "@passkeys/core";
 import {
   Chain,
   EVMChains,
   filterSupportedChains,
   prepareNetworkSwitch,
-  SKConfig,
-  SwapKitError,
   switchEVMWalletNetwork,
+  USwapConfig,
+  USwapError,
   WalletOption,
-} from "@swapkit/helpers";
-import type { SolanaProvider } from "@swapkit/toolboxes/solana";
-import { createWallet, getWalletSupportedChains } from "@swapkit/wallet-core";
+} from "@uswap/helpers";
+import type { SolanaProvider } from "@uswap/toolboxes/solana";
+import { createWallet, getWalletSupportedChains } from "@uswap/wallet-core";
 import { Psbt } from "bitcoinjs-lib";
 import {
   AddressPurpose,
@@ -24,7 +28,7 @@ import {
 import { match } from "ts-pattern";
 
 async function getPasskeyWallet() {
-  const appId = SKConfig.get("apiKeys").passkeys;
+  const appId = USwapConfig.get("apiKeys").passkeys;
   const { createWallet } = await import("@passkeys/core");
 
   return createWallet({
@@ -36,11 +40,11 @@ async function getPasskeyWallet() {
 function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain: Chain }) {
   return match(paramChain)
     .with(Chain.Bitcoin, async (chain) => {
-      const { getUtxoToolbox } = await import("@swapkit/toolboxes/utxo");
+      const { getUtxoToolbox } = await import("@uswap/toolboxes/utxo");
       const provider = await wallet.getProvider("bitcoin");
 
       if (!provider) {
-        throw new SwapKitError("wallet_passkeys_not_found");
+        throw new USwapError("wallet_passkeys_not_found");
       }
 
       let address = "";
@@ -50,10 +54,10 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
       const getAddressOptions: GetAddressOptions = {
         getProvider,
         onCancel: () => {
-          throw new SwapKitError("wallet_passkeys_request_canceled");
+          throw new USwapError("wallet_passkeys_request_canceled");
         },
         onFinish: (response: GetAddressResponse) => {
-          if (!response.addresses[0]) throw new SwapKitError("wallet_passkeys_no_address");
+          if (!response.addresses[0]) throw new USwapError("wallet_passkeys_no_address");
           address = response.addresses[0].address;
         },
         payload: {
@@ -71,7 +75,7 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
         const signPsbtOptions: SignTransactionOptions = {
           getProvider,
           onCancel: () => {
-            throw new SwapKitError("wallet_passkeys_signature_canceled");
+            throw new USwapError("wallet_passkeys_signature_canceled");
           },
           onFinish: (response) => {
             signedPsbt = Psbt.fromBase64(response.psbtBase64);
@@ -86,7 +90,7 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
         };
 
         await satsSignTransaction(signPsbtOptions);
-        if (!signedPsbt) throw new SwapKitError("wallet_passkeys_sign_transaction_error");
+        if (!signedPsbt) throw new USwapError("wallet_passkeys_sign_transaction_error");
         return signedPsbt;
       }
 
@@ -96,12 +100,12 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
       return { ...toolbox, address };
     })
     .with(...EVMChains, async (chain) => {
-      const { getProvider, getEvmToolbox } = await import("@swapkit/toolboxes/evm");
+      const { getProvider, getEvmToolbox } = await import("@uswap/toolboxes/evm");
       const { BrowserProvider } = await import("ethers");
 
       const walletProvider = await wallet.getProvider("ethereum");
       if (!walletProvider) {
-        throw new SwapKitError("wallet_passkeys_not_found");
+        throw new USwapError("wallet_passkeys_not_found");
       }
 
       const jsonRpcProvider = await getProvider(chain);
@@ -119,13 +123,13 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
           await switchEVMWalletNetwork(browserProvider, chain, networkParams);
         }
       } catch {
-        throw new SwapKitError("wallet_passkeys_failed_to_switch_network", { chain });
+        throw new USwapError("wallet_passkeys_failed_to_switch_network", { chain });
       }
 
       return { ...prepareNetworkSwitch({ chain, provider: browserProvider, toolbox }), address };
     })
     .with(Chain.Solana, async () => {
-      const { getSolanaToolbox } = await import("@swapkit/toolboxes/solana");
+      const { getSolanaToolbox } = await import("@uswap/toolboxes/solana");
       const provider = (await wallet.getProvider("solana")) as any as SolanaProvider;
       const providerConnection = await provider.connect();
       const address = providerConnection.publicKey.toString();
@@ -138,7 +142,7 @@ function getWalletMethods({ wallet, chain: paramChain }: { wallet: Wallet; chain
       return { ...toolbox, address, disconnect };
     })
     .otherwise((chain) => {
-      throw new SwapKitError("wallet_passkeys_chain_not_supported", { chain });
+      throw new USwapError("wallet_passkeys_chain_not_supported", { chain });
     });
 }
 
@@ -147,7 +151,7 @@ export const passkeysWallet = createWallet({
     async function connectPasskeys(chains: Chain[], paramWallet?: Wallet) {
       const wallet = paramWallet || (await getPasskeyWallet());
 
-      if (!wallet) throw new SwapKitError("wallet_passkeys_instance_missing");
+      if (!wallet) throw new USwapError("wallet_passkeys_instance_missing");
       const filteredChains = filterSupportedChains({ chains, supportedChains, walletType });
 
       await Promise.all(
